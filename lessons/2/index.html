@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<body>
+<script src="../util.js"></script>
+<script>
+var gl = util.getContext(854, 480)
+
+var prog = gl.createProgram()
+
+console.log(gl.isProgram(prog))
+console.log(gl.getProgramInfoLog(prog))
+
+var vshader = gl.createShader(gl.VERTEX_SHADER)
+gl.shaderSource(vshader, "void main() { gl_Position = vec4(0.0, 0.0, 0.0, 0.0); }")
+gl.compileShader(vshader)
+
+var fshader = gl.createShader(gl.FRAGMENT_SHADER)
+gl.shaderSource(fshader, "void main() { }")
+gl.compileShader(fshader)
+
+gl.attachShader(prog, vshader)
+gl.attachShader(prog, fshader)
+gl.linkProgram(prog)
+
+gl.useProgram(prog)
+
+
+
+// other valid values: gl.FRAGMENT_SHADER
+var vshader = gl.createShader(gl.VERTEX_SHADER)
+gl.shaderSource(vshader, vshaderscript.text)
+gl.compileShader(vshader)
+// gl.getShaderParameter(vshader, gl.COMPILE_STATUS)
+// gl.getShaderInfoLog(vshader)
+
+// second argument can be LOW/MEDIUM/HIGH_FLOAT/INT
+// gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_FLOAT)
+
+var fshader = gl.createShader(gl.FRAGMENT_SHADER)
+gl.shaderSource(fshader, fshaderscript.text)
+gl.compileShader(fshader)
+
+gl.attachShader(prog, vshader)
+gl.attachShader(prog, fshader)
+gl.linkProgram(prog)
+
+// gl.getProgramParameter(prog, gl.LINK_STATUS)
+// can check gl.getProgramInfoLog(prog) here
+
+gl.useProgram(prog)
+
+// gl.deleteProgram(prog)
+
+
+</script>
+

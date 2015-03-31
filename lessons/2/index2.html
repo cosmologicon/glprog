@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<body>
+<script src="util.js"></script>
+<script>
+var gl = getContext(854, 480)
+
+var prog = createProgram(
+	"void main() { gl_Position = vec4(0.0, 0.0, 0.0, 0.0); }",
+	"void main() { }"
+)
+gl.useProgram(prog)
+
+</script>
+

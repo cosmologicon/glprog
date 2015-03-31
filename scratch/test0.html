@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+
+<body style="background: #033">
+
+<canvas id="canvas"></canvas>
+
+<script type="vert" id="vshaderscript">
+void main() {
+	gl_Position = vec4(0.0, 0.0, 0.0, 0.0);
+}
+</script>
+<script type="frag" id="fshaderscript">
+void main() {
+}
+</script>
+
+<script>
+var canvas = document.getElementById("canvas")
+var gl = canvas.getContext("webgl")
+
+if (!gl) throw "webgl context could not be initialized"
+
+gl.clearColor(0, 0.5, 0, 1)
+gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)  // can also do stencil buffers
+
+// this actually color the whole thing red.
+gl.viewport(20, 20, 40, 40)
+gl.clearColor(0.5, 0, 0, 1)
+gl.clear(gl.COLOR_BUFFER_BIT)
+// console.log(gl.getParameter(gl.VIEWPORT))  // Array [20, 20, 40, 40]
+// console.log(gl.getParameter(gl.COLOR_CLEAR_VALUE))  // Array [0.5, 0, 0, 1]
+
+gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
+gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
+
+//console.log(gl.getParameter(gl.SCISSOR_BOX))  // whole window
+gl.enable(gl.SCISSOR_TEST)
+gl.scissor(30, 30, 40, 40)  // note box is in lower left
+// gl.getParameter(gl.SCISSOR_BOX)
+gl.clearColor(0, 0, 0.5, 1)
+gl.clear(gl.COLOR_BUFFER_BIT)
+
+
+// Clear back to black
+gl.disable(gl.SCISSOR_TEST)
+gl.clearColor(0, 0, 0, 1)
+gl.clear(gl.COLOR_BUFFER_BIT)
+
+// The following seems to be the mininum you need to get gl.useProgram to work.
+
+var prog = gl.createProgram()
+// What all attributes does prog have?
+// gl.isProgram(prog): true
+// gl.getProgramInfoLog(prog): ""
+
+// other valid values: gl.FRAGMENT_SHADER
+var vshader = gl.createShader(gl.VERTEX_SHADER)
+gl.shaderSource(vshader, vshaderscript.text)
+gl.compileShader(vshader)
+// gl.getShaderParameter(vshader, gl.COMPILE_STATUS)
+// gl.getShaderInfoLog(vshader)
+
+// second argument can be LOW/MEDIUM/HIGH_FLOAT/INT
+// gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_FLOAT)
+
+var fshader = gl.createShader(gl.FRAGMENT_SHADER)
+gl.shaderSource(fshader, fshaderscript.text)
+gl.compileShader(fshader)
+
+gl.attachShader(prog, vshader)
+gl.attachShader(prog, fshader)
+gl.linkProgram(prog)
+
+// gl.getProgramParameter(prog, gl.LINK_STATUS)
+// can check gl.getProgramInfoLog(prog) here
+
+gl.useProgram(prog)
+
+// gl.deleteProgram(prog)
+
+</script>
+

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<body>
+<script src="../util.js"></script>
+<script>
+// Create the canvas and resize it to 854x480
+var canvas = document.createElement("canvas")
+document.body.appendChild(canvas)
+canvas.width = 854
+canvas.height = 480
+
+// Create a webGL context from the canvas
+var gl = canvas.getContext("webgl")
+if (!gl) throw "webgl context could not be initialized"
+
+// This is the size of the drawing buffer, 854, 480 in this case.
+// Should be equivalent to gl.canvas.width and gl.canvas.height.
+console.log(gl.drawingBufferWidth, gl.drawingBufferHeight)
+
+// It's important to call gl.viewport if you ever resize the canvas.
+// Any of the following would be fine.
+gl.viewport(0, 0, 854, 480)
+gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
+gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
+// Outputs the Array [0, 0, 854, 480]
+console.log(gl.getParameter(gl.VIEWPORT))
+
+
+// Set the clear color to green (0, 0.5, 0)
+gl.clearColor(0, 0.5, 0, 1)
+
+// Will output the array [0, 0.5, 0, 1]
+console.log(gl.getParameter(gl.COLOR_CLEAR_VALUE))
+
+// Clear the canvas (set every pixel to the clear color)
+gl.clear(gl.COLOR_BUFFER_BIT)
+
+
+// Clear
+
+// Outputs false (scissoring is disabled by default)
+console.log(gl.getParameter(gl.SCISSOR_TEST))
+
+// Outputs the Array [0, 0, 854, 480] (whole window)
+console.log(gl.getParameter(gl.SCISSOR_BOX))
+
+gl.enable(gl.SCISSOR_TEST)
+console.log(gl.getParameter(gl.SCISSOR_TEST))  // Now outputs true
+
+// Restrict the draw region to a 120x120 box with lower-left corner at (100, 10)
+gl.scissor(100, 10, 120, 120)
+console.log(gl.getParameter(gl.SCISSOR_BOX))  // Now outputs [100, 10, 120, 120]
+
+// Clear the scissor area to blue.
+gl.clearColor(0, 0, 0.5, 1)
+gl.clear(gl.COLOR_BUFFER_BIT)
+
+gl.disable(gl.SCISSOR_TEST)
+
+
+</script>
+
