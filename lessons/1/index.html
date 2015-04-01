@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <body>
+<p>Create a 854x480 canvas filled green, with a 120x120 box filled blue near the lower left corner.
 <script src="../util.js"></script>
 <script>
+
+// SET UP THE CANVAS AND THE GL CONTEXT
+
 // Create the canvas and resize it to 854x480
 var canvas = document.createElement("canvas")
 document.body.appendChild(canvas)
@@ -21,41 +25,45 @@ console.log(gl.drawingBufferWidth, gl.drawingBufferHeight)
 gl.viewport(0, 0, 854, 480)
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
-// Outputs the Array [0, 0, 854, 480]
+
+// Output: [0, 0, 854, 480]
 console.log(gl.getParameter(gl.VIEWPORT))
 
+
+// COLOR THE ENTIRE CANVAS GREEN
 
 // Set the clear color to green (0, 0.5, 0)
 gl.clearColor(0, 0.5, 0, 1)
 
-// Will output the array [0, 0.5, 0, 1]
+// Output: [0, 0.5, 0, 1]
 console.log(gl.getParameter(gl.COLOR_CLEAR_VALUE))
 
 // Clear the canvas (set every pixel to the clear color)
 gl.clear(gl.COLOR_BUFFER_BIT)
 
 
-// Clear
+// COLOR A BOX BLUE
 
-// Outputs false (scissoring is disabled by default)
+// Output: false
 console.log(gl.getParameter(gl.SCISSOR_TEST))
 
-// Outputs the Array [0, 0, 854, 480] (whole window)
+// Output: [0, 0, 854, 480]
 console.log(gl.getParameter(gl.SCISSOR_BOX))
 
 gl.enable(gl.SCISSOR_TEST)
-console.log(gl.getParameter(gl.SCISSOR_TEST))  // Now outputs true
+// Output: true
+console.log(gl.getParameter(gl.SCISSOR_TEST))
 
 // Restrict the draw region to a 120x120 box with lower-left corner at (100, 10)
 gl.scissor(100, 10, 120, 120)
-console.log(gl.getParameter(gl.SCISSOR_BOX))  // Now outputs [100, 10, 120, 120]
+// Output: [100, 10, 120, 120]
+console.log(gl.getParameter(gl.SCISSOR_BOX))
 
 // Clear the scissor area to blue.
 gl.clearColor(0, 0, 0.5, 1)
 gl.clear(gl.COLOR_BUFFER_BIT)
 
 gl.disable(gl.SCISSOR_TEST)
-
 
 </script>
 

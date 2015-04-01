@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <body>
-<script src="util.js"></script>
+<p>Build a trivial GL program. Nothing will appear on the canvas.
+<script src="../util.js"></script>
 <script>
-var gl = getContext(854, 480)
+var gl = util.getContext(854, 480)
 
-var prog = createProgram(
-	"void main() { gl_Position = vec4(0.0, 0.0, 0.0, 0.0); }",
-	"void main() { }"
-)
+var vsource = "void main() { gl_Position = vec4(0.0, 0.0, 0.0, 0.0); }"
+var fsource = "void main() { }"
+var prog = util.buildProgram(gl, vsource, fsource)
 gl.useProgram(prog)
 
 </script>

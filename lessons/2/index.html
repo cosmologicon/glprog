@@ -1,55 +1,65 @@
 <!DOCTYPE html>
 <body>
+<p>Build a trivial GL program. Nothing will appear on the canvas.
 <script src="../util.js"></script>
 <script>
 var gl = util.getContext(854, 480)
 
 var prog = gl.createProgram()
 
+// Output: true
 console.log(gl.isProgram(prog))
+// Output: ""
 console.log(gl.getProgramInfoLog(prog))
 
+// Create a vertex shader object
 var vshader = gl.createShader(gl.VERTEX_SHADER)
+// Output: true
+console.log(gl.isShader(vshader))
+// Output: a Number equal to gl.VERTEX_SHADER
+console.log(gl.getShaderParameter(vshader, gl.SHADER_TYPE))
+// Set the source code for the shader
 gl.shaderSource(vshader, "void main() { gl_Position = vec4(0.0, 0.0, 0.0, 0.0); }")
+// Output: the source code for this shader
+console.log(gl.getShaderSource(vshader))
+// Compile the shader
 gl.compileShader(vshader)
+// Output: true
+console.log(gl.getShaderParameter(vshader, gl.COMPILE_STATUS))
+// Output: ""
+console.log(gl.getShaderInfoLog(vshader))
+// Attach the shader to the program
+gl.attachShader(prog, vshader)
+// Explicitly delete the shader. Usually unnecessary.
+gl.deleteShader(vshader)
 
+// Similarly create, compile, and attach a fragment shader
 var fshader = gl.createShader(gl.FRAGMENT_SHADER)
 gl.shaderSource(fshader, "void main() { }")
 gl.compileShader(fshader)
-
-gl.attachShader(prog, vshader)
 gl.attachShader(prog, fshader)
+
+// Output: 2
+console.log(gl.getProgramParameter(prog, gl.ATTACHED_SHADERS))
+// Output: an Array of the two attached shaders
+console.log(gl.getAttachedShaders(prog))
+
+// Once a vertex and fragment shader are both attached, link the program.
 gl.linkProgram(prog)
+// Output: true
+console.log(gl.getProgramParameter(prog, gl.LINK_STATUS))
+
+// Once a vertex and fragment shader are both attached, link the program.
+gl.validateProgram(prog)
+// Output: true
+console.log(gl.getProgramParameter(prog, gl.VALIDATE_STATUS))
 
 gl.useProgram(prog)
 
-
-
-// other valid values: gl.FRAGMENT_SHADER
-var vshader = gl.createShader(gl.VERTEX_SHADER)
-gl.shaderSource(vshader, vshaderscript.text)
-gl.compileShader(vshader)
-// gl.getShaderParameter(vshader, gl.COMPILE_STATUS)
-// gl.getShaderInfoLog(vshader)
-
-// second argument can be LOW/MEDIUM/HIGH_FLOAT/INT
-// gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_FLOAT)
-
-var fshader = gl.createShader(gl.FRAGMENT_SHADER)
-gl.shaderSource(fshader, fshaderscript.text)
-gl.compileShader(fshader)
-
-gl.attachShader(prog, vshader)
-gl.attachShader(prog, fshader)
-gl.linkProgram(prog)
-
-// gl.getProgramParameter(prog, gl.LINK_STATUS)
-// can check gl.getProgramInfoLog(prog) here
-
-gl.useProgram(prog)
-
-// gl.deleteProgram(prog)
-
+// Explicitly delete the program. Usually unnecessary.
+gl.deleteProgram(prog)
+// Output: true
+console.log(gl.getProgramParameter(prog, gl.DELETE_STATUS))
 
 </script>
 
