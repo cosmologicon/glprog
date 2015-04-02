@@ -19,7 +19,7 @@ console.log(gl.isShader(vshader))
 // Output: a Number equal to gl.VERTEX_SHADER
 console.log(gl.getShaderParameter(vshader, gl.SHADER_TYPE))
 // Set the source code for the shader
-gl.shaderSource(vshader, "void main() { gl_Position = vec4(0.0, 0.0, 0.0, 0.0); }")
+gl.shaderSource(vshader, "void main() { gl_Position = vec4(0.0, 0.0, 0.0, 1.0); }")
 // Output: the source code for this shader
 console.log(gl.getShaderSource(vshader))
 // Compile the shader

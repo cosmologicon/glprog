@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<body>
+<p>Draw three points on the canvas: 10px green on the positive x axis, 10px red at the center, and
+20px yellow on the positive y axis.
+<script src="../util.js"></script>
+<script type="x-shader/x-vertex" id="vsource">
+uniform mediump vec2 pos;
+uniform mediump float size;
+void main() {
+	gl_Position = vec4(pos, 0.0, 1.0);
+	gl_PointSize = size;
+}
+</script>
+<script type="x-shader/x-fragment" id="fsource">
+uniform mediump vec3 color;
+void main() {
+	gl_FragColor = vec4(color, 1.0);
+}
+</script>
+<script>
+var gl = util.getContext(854, 480)
+util.clear(gl, [0, 0, 0])
+
+var prog = util.buildProgram(gl, vsource.text, fsource.text)
+gl.useProgram(prog)
+
+util.setUniform(gl, "pos", 0.5, 0)
+util.setUniform(gl, "size", 10)
+util.setUniform(gl, "color", 0, 1, 0)
+gl.drawArrays(gl.POINTS, 0, 1)
+
+util.setUniform(gl, "pos", 0, 0)
+util.setUniform(gl, "size", 10)
+util.setUniform(gl, "color", 1, 0, 0)
+gl.drawArrays(gl.POINTS, 0, 1)
+
+util.setUniformv(gl, "pos", [0, 0.5])
+util.setUniformv(gl, "size", [20])
+util.setUniformv(gl, "color", [1, 1, 0])
+gl.drawArrays(gl.POINTS, 0, 1)
+
+</script>
+

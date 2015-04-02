@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<body>
+<p>Draw three points on the canvas: 10px green on the positive x axis, 10px red at the center, and
+20px yellow on the positive y axis.
+<script src="../util.js"></script>
+<script type="x-shader/x-vertex" id="vsource">
+uniform mediump vec2 pos;
+uniform mediump float size;
+void main() {
+	gl_Position = vec4(pos, 0.0, 1.0);
+	gl_PointSize = size;
+}
+</script>
+<script type="x-shader/x-fragment" id="fsource">
+uniform mediump vec3 color;
+void main() {
+	gl_FragColor = vec4(color, 1.0);
+}
+</script>
+<script>
+var gl = util.getContext(854, 480)
+util.clear(gl, [0, 0, 0])
+
+// Note: we're using script tags in the HTML for the shader source code. There's nothing special
+// about this technique. It's just the cleanest way to specify multiline strings in JavaScript.
+// Any method of specifying a string will work.
+// You need to specify the type attribute of the script tags for the shader source, so they don't
+// get interpreted as JavaScript.
+var prog = util.buildProgram(gl, vsource.text, fsource.text)
+gl.useProgram(prog)
+
+// Output: 3
+console.log(gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS))
+
+console.log(gl.getActiveUniform(prog, 0))
+console.log(gl.getActiveUniform(prog, 1))
+console.log(gl.getActiveUniform(prog, 2))
+
+// The WebGLUniformLocation objects corresponding to the program uniforms.
+var pos = gl.getUniformLocation(prog, "pos")
+var size = gl.getUniformLocation(prog, "size")
+var color = gl.getUniformLocation(prog, "color")
+
+// A 10px green point along the positive x axis (0.5, 0)
+gl.uniform2f(pos, 0.5, 0)
+// Output: [0.5, 0]
+console.log(gl.getUniform(prog, pos))
+gl.uniform1f(size, 10)
+gl.uniform3f(color, 0, 1, 0)
+// Draw a single point with the specified uniforms.
+gl.drawArrays(gl.POINTS, 0, 1)
+
+// A 10px red point at the center (0, 0).
+// We don't need to update size if it's the same as before.
+gl.uniform2f(pos, 0, 0)
+gl.uniform3f(color, 1, 0, 0)
+gl.drawArrays(gl.POINTS, 0, 1)
+
+// A 20px yellow point along the positive y axis (0, 0.5)
+// The vector (v) forms of the update functions takes an Array.
+gl.uniform2fv(pos, [0, 0.5])
+gl.uniform1fv(size, [20])
+gl.uniform3fv(color, [1, 1, 0])
+gl.drawArrays(gl.POINTS, 0, 1)
+
+</script>
+

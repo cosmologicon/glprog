@@ -53,5 +53,74 @@ var util = {
 		gl.validateProgram(prog)
 		return prog
 	},
+
+	getUniformType: function (gl, prog, uniformname) {
+		var n = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS)
+		for (var i = 0 ; i < n ; ++i) {
+			var info = gl.getActiveUniform(prog, i)
+			if (info.name == uniformname) return info.type
+		}
+		throw "Unable to get info for uniform " + uniformname
+	},
+
+	getTypeLetter: function (gl, type) {
+		switch (type) {
+			case gl.FLOAT: case gl.FLOAT_VEC2: case gl.FLOAT_VEC3: case gl.FLOAT_VEC4:
+			case gl.FLOAT_MAT2: case gl.FLOAT_MAT3: case gl.FLOAT_MAT4:
+				return "f"
+			case gl.INT: case gl.INT_VEC2: case gl.INT_VEC3: case gl.INT_VEC4:
+			case gl.BOOL: case gl.BOOL_VEC2: case gl.BOOL_VEC3: case gl.BOOL_VEC4:
+			case gl.SAMPLER_2D: case SAMPLER_CUBE:
+				return "i"
+		}
+		throw "Unrecognized type " + type
+	},
+	getTypeSize: function (gl, type) {
+		switch (type) {
+			case gl.FLOAT: case gl.INT: case gl.BOOL:
+			case gl.SAMPLER_2D: case gl.SAMPLER_CUBE:
+				return 1
+			case gl.FLOAT_VEC2: case gl.INT_VEC2: case gl.BOOL_VEC2: case gl.FLOAT_MAT2:
+				return 2
+			case gl.FLOAT_VEC3: case gl.INT_VEC3: case gl.BOOL_VEC3: case gl.FLOAT_MAT3:
+				return 3
+			case gl.FLOAT_VEC4: case gl.INT_VEC4: case gl.BOOL_VEC4: case gl.FLOAT_MAT4:
+				return 4
+		}
+		throw "Unable to get size for type " + type
+	},
+	isMatrixType: function (gl, type) {
+		switch (type) {
+			case gl.FLOAT_MAT2: case gl.FLOAT_MAT3: case gl.FLOAT_MAT4:
+				return true
+			default:
+				return false
+		}
+	},
+
+	setUniform: function (gl, uniformname) {
+		var prog = gl.getParameter(gl.CURRENT_PROGRAM)
+		var type = this.getUniformType(gl, prog, uniformname)
+		if (this.isMatrixType(gl, type)) throw "Must use vector form to set matrix uniforms."
+		var methodname = "uniform" + this.getTypeSize(gl, type) + this.getTypeLetter(gl, type)
+		var location = gl.getUniformLocation(prog, uniformname)
+		var args = [].slice.call(arguments, 2)
+		args.unshift(location)
+		gl[methodname].apply(gl, args)
+	},
+
+	setUniformv: function (gl, uniformname, value) {
+		var prog = gl.getParameter(gl.CURRENT_PROGRAM)
+		var type = this.getUniformType(gl, prog, uniformname)
+		var location = gl.getUniformLocation(prog, uniformname)
+		var suffix = this.getTypeSize(gl, type) + this.getTypeLetter(gl, type) + "v"
+		if (this.isMatrixType(gl, type)) {
+			var methodname = "uniformMatrix" + suffix
+			gl[methodname](location, false, value)
+		} else {
+			methodname = "uniform" + suffix
+			gl[methodname](location, value)
+		}
+	},
 }
 

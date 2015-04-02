@@ -5,7 +5,7 @@
 <script>
 var gl = util.getContext(854, 480)
 
-var vsource = "void main() { gl_Position = vec4(0.0, 0.0, 0.0, 0.0); }"
+var vsource = "void main() { gl_Position = vec4(0.0, 0.0, 0.0, 1.0); }"
 var fsource = "void main() { }"
 var prog = util.buildProgram(gl, vsource, fsource)
 gl.useProgram(prog)
