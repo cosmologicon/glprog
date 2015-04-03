@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<body>
+<p>
+<script src="../util.js"></script>
+<script type="x-shader/x-vertex" id="vsource">
+uniform mat2 rotation;
+uniform mat2 tilt;
+uniform mediump vec3 gamepos;
+uniform mediump vec3 viewportsize;
+uniform mediump float size;
+void main() {
+	vec3 gpos = gamepos;
+	gpos.xz *= rotation;
+	gpos.yz *= tilt;
+	mediump float gamescale = 0.4 * viewportsize.y;
+	vec3 viewpos = viewportsize * 0.5 + gpos * gamescale;
+
+	// Scale from view coordinates to clip coordinates.
+	// Primitives appear if each of their clip coordinates are in the range [-1, 1].
+	vec3 clippos = viewpos / viewportsize * 2.0 - 1.0;
+	gl_Position = vec4(clippos, 1.0);
+	gl_PointSize = size / (1.0 + 0.6 * clippos.z);
+}
+</script>
+<script type="x-shader/x-fragment" id="fsource">
+uniform mediump vec3 color;
+void main() {
+	// A unit vector pointing out from the center of a sphere.
+	mediump vec3 r;
+	r.xy = gl_PointCoord * 2.0 - 1.0;
+	mediump float z2 = 1.0 - length(r.xy);
+	if (z2 < 0.0) {
+		discard;
+	}
+	r.z = sqrt(z2);
+	mediump float edgefade = smoothstep(0.0, 0.25, r.z);
+	mediump float shade = 0.4 + 0.4 * dot(r, vec3(-1.0, -1.0, 1.0));
+	shade = clamp(shade, 0.0, 1.0);
+
+	gl_FragColor = vec4(color * shade, edgefade);
+}
+</script>
+<script>
+var tau = 2 * Math.PI
+
+function randrange(a, b) {
+	return a + (b - a) * Math.random()
+}
+function randompoint() {
+	var x = randrange(-1, 1), y = randrange(-1, 1), z = randrange(-1, 1)
+	if (x * x + y * y + z * z > 1) return randompoint()
+	var r = randrange(0.5, 1), g = randrange(0.5, 1), b = randrange(0.5, 1)
+	return {
+		gamepos: [x, y, z],
+		color: [r, g, b],
+	}
+}
+var points = []
+while (points.length < 80) points.push(randompoint())
+
+var gl = util.getContext(854, 480)
+
+gl.enable(gl.BLEND)
+gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD)
+gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE)
+gl.enable(gl.DEPTH_TEST)
+gl.depthFunc(gl.LESS)
+
+var prog = util.buildProgram(gl, vsource.text, fsource.text)
+gl.useProgram(prog)
+util.setUniformv(gl, "viewportsize", [854, 480, 1000])
+util.setUniform(gl, "size", 50)
+var theta = 0.4, S = Math.sin(theta), C = Math.cos(theta)
+util.setUniformv(gl, "tilt", [C, S, -S, C])
+
+function update() {
+	var t = 0.001 * Date.now()
+	var theta = t % tau, S = Math.sin(theta), C = Math.cos(theta)
+	util.clear(gl, [0, 0, 0])
+	util.setUniformv(gl, "rotation", [C, S, -S, C])
+	points.forEach(function (point) {
+		util.drawPoint(gl, {gamepos: point.gamepos, color: point.color})
+	})
+}
+setInterval(update, 1000 / 60)
+
+</script>
+
