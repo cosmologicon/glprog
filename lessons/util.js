@@ -25,7 +25,7 @@ var util = {
 			gl.scissor(box[0], box[1], box[2], box[3])
 		}
 		gl.clearColor(color[0], color[1], color[2], 1)
-		gl.clear(gl.COLOR_BUFFER_BIT)
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		if (box) gl.disable(gl.SCISSOR_TEST)
 	},
 	// Build a GL program from the given gl context, using the given source for the vertex and
@@ -121,6 +121,20 @@ var util = {
 			methodname = "uniform" + suffix
 			gl[methodname](location, value)
 		}
+	},
+
+	// Draw a single point, first setting any given uniforms
+	drawPoint: function (gl, uniforms) {
+		uniforms = uniforms || {}
+		for (var uniformname in uniforms) {
+			var value = uniforms[uniformname]
+			if (Array.isArray(value)) {
+				this.setUniformv(gl, uniformname, value)
+			} else {
+				this.setUniform(gl, uniformname, value)
+			}
+		}
+		gl.drawArrays(gl.POINTS, 0, 1)
 	},
 }
 

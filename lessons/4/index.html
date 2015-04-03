@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<body>
+<p>Draw three large circular points on the canvas twice, once without depth checking, and once with
+depth checking. When depth checking is enabled, the green point should appear closest. Without
+depth checking, the points appear in the order they're drawn (green, then yellow, then red).
+<script src="../util.js"></script>
+<script type="x-shader/x-vertex" id="vsource">
+uniform mediump vec3 viewpos;
+uniform mediump vec3 viewportsize;
+uniform mediump float size;
+void main() {
+	// Scale from view coordinates to clip coordinates.
+	// Primitives appear if each of their clip coordinates are in the range [-1, 1].
+	vec3 clippos = viewpos / viewportsize * 2.0 - 1.0;
+	gl_Position = vec4(clippos, 1.0);
+	gl_PointSize = size;
+}
+</script>
+<script type="x-shader/x-fragment" id="fsource">
+uniform mediump vec3 color;
+void main() {
+	// Shape the point like a circle rather than a square.
+	// The point coordinates range between 0 and 1 over the point, so the center is at
+	// (0.5, 0.5), and the radius is 0.5.
+	if (distance(gl_PointCoord, vec2(0.5, 0.5)) > 0.5) {
+		discard;
+	}
+	gl_FragColor = vec4(color, 1.0);
+}
+</script>
+<script>
+var gl = util.getContext(854, 480)
+util.clear(gl, [0, 0, 0])
+
+var prog = util.buildProgram(gl, vsource.text, fsource.text)
+gl.useProgram(prog)
+util.setUniformv(gl, "viewportsize", [854, 480, 1000])
+util.setUniform(gl, "size", 100)
+
+// Output: the number of bits in your depth buffer (at least 16)
+console.log(gl.getParameter(gl.DEPTH_BITS))
+// Output: [0, 1]
+console.log(gl.getParameter(gl.DEPTH_RANGE))
+// Output: true
+console.log(gl.getParameter(gl.DEPTH_WRITEMASK))
+// Output: 1
+console.log(gl.getParameter(gl.DEPTH_CLEAR_VALUE))
+
+util.drawPoint(gl, {viewpos: [300, 160, 500], color: [0, 1, 0]})
+util.drawPoint(gl, {viewpos: [280, 240, 600], color: [1, 1, 0]})
+util.drawPoint(gl, {viewpos: [260, 320, 700], color: [1, 0, 0]})
+
+gl.enable(gl.DEPTH_TEST)
+gl.depthFunc(gl.LESS)
+//gl.depthRange(0, 1)
+//gl.depthMask(false)
+
+// Uncommenting the following two lines will prevent the red point from being drawn,
+// by filling the depth buffer with a value corresponding to a depth closer than
+// the red point.
+//gl.clearDepth(0.65)
+//gl.clear(gl.DEPTH_BUFFER_BIT)
+
+util.drawPoint(gl, {viewpos: [600, 160, 500], color: [0, 1, 0]})
+util.drawPoint(gl, {viewpos: [580, 240, 600], color: [1, 1, 0]})
+util.drawPoint(gl, {viewpos: [560, 320, 700], color: [1, 0, 0]})
+
+</script>
+
