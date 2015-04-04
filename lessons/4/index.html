@@ -1,8 +1,19 @@
 <!DOCTYPE html>
 <body>
-<p>Draw three large circular points on the canvas twice, once without depth checking, and once with
-depth checking. When depth checking is enabled, the green point should appear closest. Without
-depth checking, the points appear in the order they're drawn (green, then yellow, then red).
+<p>Depth and blending. Points are drawn in the order red, yellow, blue, and their z-values are
+chosen so that red is nearest and blue is farthest. Each column shows the points drawn with alpha
+values of 100%, 75%, 50%, and 25%. The settings for the columns are, from left to right:
+<ol>
+<li>No depth testing and no blending.
+<li>Standard depth testing and no blending.
+<li>No depth testing and standard blending.
+<li>Standard depth testing and standard blending.
+<li>No depth testing and separated blending.
+<li>No depth testing and standard blending, with alpha color mask disabled.
+<li>Standard depth testing and standard blending, with alpha color mask disabled.
+<li>Standard depth testing and standard blending, with alpha color mask and depth mask disabled.
+</ol>
+
 <script src="../util.js"></script>
 <script type="x-shader/x-vertex" id="vsource">
 uniform mediump vec3 viewpos;
@@ -10,7 +21,7 @@ uniform mediump vec3 viewportsize;
 uniform mediump float size;
 void main() {
 	// Scale from view coordinates to clip coordinates.
-	// Primitives appear if each of their clip coordinates are in the range [-1, 1].
+	// Points appear if each of their clip coordinates are in the range [-1, 1].
 	vec3 clippos = viewpos / viewportsize * 2.0 - 1.0;
 	gl_Position = vec4(clippos, 1.0);
 	gl_PointSize = size;
@@ -18,14 +29,9 @@ void main() {
 </script>
 <script type="x-shader/x-fragment" id="fsource">
 uniform mediump vec3 color;
+uniform mediump float alpha;
 void main() {
-	// Shape the point like a circle rather than a square.
-	// The point coordinates range between 0 and 1 over the point, so the center is at
-	// (0.5, 0.5), and the radius is 0.5.
-	if (distance(gl_PointCoord, vec2(0.5, 0.5)) > 0.5) {
-		discard;
-	}
-	gl_FragColor = vec4(color, 1.0);
+	gl_FragColor = vec4(color, alpha);
 }
 </script>
 <script>
@@ -35,7 +41,23 @@ util.clear(gl, [0, 0, 0])
 var prog = util.buildProgram(gl, vsource.text, fsource.text)
 gl.useProgram(prog)
 util.setUniformv(gl, "viewportsize", [854, 480, 1000])
-util.setUniform(gl, "size", 100)
+util.setUniform(gl, "size", 60)
+
+// The points are drawn in the order red, yellow, blue, with red closest to the viewer and blue
+// farthest. (Whether they actually appear like that depends on the depth settings.)
+function drawpoints(x0, y0, alpha) {
+	util.setUniform(gl, "alpha", alpha)
+	util.drawPoint(gl, {viewpos: [x0, y0, 500], color: [1, 0, 0]})
+	util.drawPoint(gl, {viewpos: [x0+15, y0-15, 600], color: [1, 1, 0]})
+	util.drawPoint(gl, {viewpos: [x0+30, y0-30, 700], color: [0, 0, 1]})
+}
+function drawcolumn(y0) {
+	util.clear(gl, [1, 1, 1], [y0 + 5, 0, 20, 480])
+	drawpoints(y0, 400, 1)
+	drawpoints(y0, 300, 0.75)
+	drawpoints(y0, 200, 0.5)
+	drawpoints(y0, 100, 0.25)
+}
 
 // Output: the number of bits in your depth buffer (at least 16)
 console.log(gl.getParameter(gl.DEPTH_BITS))
@@ -45,25 +67,56 @@ console.log(gl.getParameter(gl.DEPTH_RANGE))
 console.log(gl.getParameter(gl.DEPTH_WRITEMASK))
 // Output: 1
 console.log(gl.getParameter(gl.DEPTH_CLEAR_VALUE))
+// Output: gl.LESS
+console.log(gl.getParameter(gl.DEPTH_FUNC))
+// Output: false
+console.log(gl.getParameter(gl.DEPTH_TEST))
 
-util.drawPoint(gl, {viewpos: [300, 160, 500], color: [0, 1, 0]})
-util.drawPoint(gl, {viewpos: [280, 240, 600], color: [1, 1, 0]})
-util.drawPoint(gl, {viewpos: [260, 320, 700], color: [1, 0, 0]})
-
-gl.enable(gl.DEPTH_TEST)
-gl.depthFunc(gl.LESS)
 //gl.depthRange(0, 1)
-//gl.depthMask(false)
 
-// Uncommenting the following two lines will prevent the red point from being drawn,
-// by filling the depth buffer with a value corresponding to a depth closer than
-// the red point.
+// Uncommenting the following two lines will prevent the blue point from being drawn in columns
+// where depth testing is enabled, by filling the depth buffer with a value corresponding to a depth
+// closer than the blue point.
 //gl.clearDepth(0.65)
 //gl.clear(gl.DEPTH_BUFFER_BIT)
 
-util.drawPoint(gl, {viewpos: [600, 160, 500], color: [0, 1, 0]})
-util.drawPoint(gl, {viewpos: [580, 240, 600], color: [1, 1, 0]})
-util.drawPoint(gl, {viewpos: [560, 320, 700], color: [1, 0, 0]})
+
+// Column 1: no depth testing and no blending.
+drawcolumn(60)
+
+// Column 2: standard depth testing and no blending.
+gl.enable(gl.DEPTH_TEST)
+gl.depthFunc(gl.LESS)
+drawcolumn(160)
+
+// Column 3: no depth testing and standard blending.
+gl.disable(gl.DEPTH_TEST)
+gl.enable(gl.BLEND)
+// gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD)
+gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+drawcolumn(260)
+
+// Column 4: standard depth testing and standard blending.
+gl.enable(gl.DEPTH_TEST)
+drawcolumn(360)
+
+// Column 5: no depth testing and separated blending.
+gl.disable(gl.DEPTH_TEST)
+gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE)
+drawcolumn(460)
+
+// Column 6: no depth testing and standard blending, alpha color mask disabled.
+gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+gl.colorMask(true, true, true, false)
+drawcolumn(560)
+
+// Column 7: standard depth testing and standard blending, alpha color mask disabled.
+gl.enable(gl.DEPTH_TEST)
+drawcolumn(660)
+
+// Column 8: standard depth testing and standard blending, alpha color mask and depth mask disabled.
+gl.depthMask(false)
+drawcolumn(760)
 
 </script>
 

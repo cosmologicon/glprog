@@ -6,7 +6,8 @@ var util = {
 	getContext: function (width, height) {
 		var canvas = document.createElement("canvas")
 		document.body.appendChild(canvas)
-		var gl = canvas.getContext("webgl")
+		var gl = canvas.getContext("webgl", {
+		})
 		if (!gl) throw "webgl context could not be initialized"
 		if (width) this.resize(gl, width, height)
 		return gl
