@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<body>
+<p>Texture mipmap and wrapping options. At the top left is the unscaled checkerboard pattern that
+exists in the texture.
+<p>The left column shows a zoomed-out texture rendering using the six various subsampling
+options (from top to bottom: nearest, linear, nearest_mipmap_nearest, linear_mipmap_nearest,
+nearest_mipmap_linear, linear_mipmap_linear). 
+<p>The next column shows a zoomed-in texture rendering using the two supersampling options
+(nearest on top and linear on bottom).
+<p>On the right are the three wrap options when the texture coordinates extend outside the texture
+(upper left: repeat, lower left: clamp_to_edge, upper right: mirrored_repeat).
+<script src="../util.js"></script>
+<script type="x-shader/x-vertex" id="vsource">
+uniform vec2 viewpos;
+uniform mediump float pointsize;
+const vec2 viewportsize = vec2(854.0, 480.0);
+void main() {
+	vec2 clippos = viewpos / viewportsize * 2.0 - 1.0;
+	gl_Position = vec4(clippos, 0.0, 1.0);
+	gl_PointSize = pointsize;
+}
+</script>
+<script type="x-shader/x-fragment" id="fsource">
+uniform lowp sampler2D sampler;
+uniform mediump float texturescale;
+void main() {
+	mediump vec2 texpos = gl_PointCoord * texturescale;
+	gl_FragColor = texture2D(sampler, texpos);
+	// See also texture2DProj and texture2DLod
+	// what about sampler cubes?
+}
+</script>
+<script>
+// Create the checkerboard image to use as a texture.
+var imgcanvas = document.createElement("canvas")
+imgcanvas.width = 64
+imgcanvas.height = 64
+var imgcontext = imgcanvas.getContext("2d")
+function drawchecker(x0, y0, scale) {
+	for (var i = 0 ; i < 8 ; ++i) {
+		for (var j = 0 ; j < 8 ; ++j) {
+			imgcontext.fillStyle = (i + j) % 2 ? "red" : "blue"
+			imgcontext.fillRect(x0 + i * scale, y0 + j * scale, scale, scale)
+		}
+	}
+}
+drawchecker(0, 0, 8)
+drawchecker(16, 16, 4)
+drawchecker(24, 24, 2)
+drawchecker(28, 28, 1)
+
+var gl = util.getContext(854, 480)
+util.clear(gl, [0, 0, 0])
+
+// Output: your maximum texture size (probably a power of 2 at least 2048)
+console.log(gl.getParameter(gl.MAX_TEXTURE_SIZE))
+// Output: number of textures that can be accessed by fragment shaders (at least 8)
+console.log(gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS))
+// Output: number of textures that can be accessed by vertex shaders (can be 0)
+console.log(gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS))
+// 
+console.log(gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS))
+
+// Uncomment to vertically flip images when they're loaded into textures.
+//gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
+
+// Create the texture.
+var texture = gl.createTexture()
+// Bind the texture to the target TEXTURE_2D. Operations on TEXTURE_2D will apply to the
+// currently bound texture.
+gl.bindTexture(gl.TEXTURE_2D, texture)
+// Load the image data.
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imgcanvas)
+// Generate mipmaps for the texture.
+gl.generateMipmap(gl.TEXTURE_2D)
+
+// gl.texSubImage2D
+// gl.texParameterf(gl.TEXTURE_2D, ..., value)
+
+
+console.log(gl.getParameter(gl.ACTIVE_TEXTURE))
+
+
+
+
+var prog = util.buildProgram(gl, vsource.text, fsource.text)
+gl.useProgram(prog)
+gl.activeTexture(gl.TEXTURE17)
+gl.bindTexture(gl.TEXTURE_2D, texture)
+util.setUniform(gl, "sampler", 17)
+
+// Draw the unzoomed texture in the upper left.
+util.drawPoint(gl, {viewpos: [40, 440], pointsize: 64, texturescale: 1})
+
+// Draw the zoomed out texture with six different subsampling settings.
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+util.drawPoint(gl, {viewpos: [60, 320], pointsize: 25, texturescale: 1})
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+util.drawPoint(gl, {viewpos: [60, 280], pointsize: 25, texturescale: 1})
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST)
+util.drawPoint(gl, {viewpos: [60, 240], pointsize: 25, texturescale: 1})
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST)
+util.drawPoint(gl, {viewpos: [60, 200], pointsize: 25, texturescale: 1})
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR)
+util.drawPoint(gl, {viewpos: [60, 160], pointsize: 25, texturescale: 1})
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+util.drawPoint(gl, {viewpos: [60, 120], pointsize: 25, texturescale: 1})
+
+// Draw the zoomed in texture with two different subsampling settings.
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+util.drawPoint(gl, {viewpos: [220, 300], pointsize: 155, texturescale: 1})
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+util.drawPoint(gl, {viewpos: [220, 110], pointsize: 155, texturescale: 1})
+
+// Draw beyond the texture with three different wrapping settings.
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+util.drawPoint(gl, {viewpos: [480, 300], pointsize: 160, texturescale: 2.5})
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+util.drawPoint(gl, {viewpos: [480, 100], pointsize: 160, texturescale: 2.5})
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT)
+util.drawPoint(gl, {viewpos: [680, 300], pointsize: 160, texturescale: 2.5})
+
+</script>
