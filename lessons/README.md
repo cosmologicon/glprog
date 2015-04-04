@@ -32,11 +32,10 @@ Here's my short advice:
 If you don't have any alpha transparency in your scene whatsoever, enable depth testing (with the
 default depth function of LESS) and leave blending disabled. That's all you need.
 
-If you do need to worry about alpha transparency, start by disabling the alpha channel color mask,
-and use the standard blending function:
+If you do need to worry about alpha transparency, use the separated blending function:
 
-    gl.colorMask(true, true, true, false)
-	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+	gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, 0, 1)
+	gl.enable(gl.BLEND)
 
 Separate your surfaces into solid and transparent ones, and draw all the solid ones first. If
 possible, sort your transparent surfaces from far to near and draw them in that order.
