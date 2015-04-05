@@ -71,7 +71,7 @@ var util = {
 				return "f"
 			case gl.INT: case gl.INT_VEC2: case gl.INT_VEC3: case gl.INT_VEC4:
 			case gl.BOOL: case gl.BOOL_VEC2: case gl.BOOL_VEC3: case gl.BOOL_VEC4:
-			case gl.SAMPLER_2D: case SAMPLER_CUBE:
+			case gl.SAMPLER_2D: case gl.SAMPLER_CUBE:
 				return "i"
 		}
 		throw "Unrecognized type " + type

@@ -47,7 +47,7 @@ void main() {
 	// calculate the z component using x^2 + y^2 + z^2 = 1.
 	mediump vec3 r;
 	r.xy = gl_PointCoord * 2.0 - 1.0;
-	mediump float zsquared = 1.0 - length(r.xy);
+	mediump float zsquared = 1.0 - dot(r.xy, r.xy);
 	if (zsquared < 0.0) discard;  // Fragment is outside the circle.
 	r.z = sqrt(zsquared);
 
