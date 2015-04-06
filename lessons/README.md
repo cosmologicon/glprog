@@ -1,49 +1,101 @@
+These lessons are aimed at people who are not already familiar with OpenGL, and don't particularly
+want to learn any kind of then than WebGL. I'm also assuming you already know JavaScript, and some
+vector math.
+
+A little background: OpenGL has several different versions with significantly different features.
+OpenGL ES is a stripped-down version of OpenGL that supports the newer features but not many of the
+older ones. It's designed to run even on less powerful hardware, like mobile devices. WebGL is based
+on OpenGL ES. The API is almost identical. The only main differences have to do with how JavaScript
+treats numerical types.
+
+The features that OpenGL ES removed are common, especially for beginners. That means that if you
+find a tutorial written for (non-ES) OpenGL, there's a very good chance it won't work in WebGL.
+I've also found that most of the tutorials for OpenGL ES or WebGL assume you already know the
+basics of OpenGL. So this tutorial tries to fill the gap, for people who don't know the basics, but
+want to learn them for WebGL.
+
+
+Here are a few concepts I've found helpful when learning how WebGL works.
+
+The context object
+
+The entire API is methods and constants on the WebGL context object, which you should call `gl`.
+The API is not object-oriented, even though you do produce objects. The objects that get produced
+don't have any useful methods. Instead, you need to pass them as argument back to `gl`. For
+instance, you can create a shader object:
+
+	var shader = gl.createShader(gl.VERTEX_SHADER)
+
+but instead of compiling it like this:
+
+	shader.compiler()
+
+you do it like this:
+
+	gl.compileShader(shader)
+
+There are a bunch of numerical constants that are used as flags for many of the methods, like
+gl.VERTEX_SHADER above. These are written with all caps. You never use their value for anything,
+you just pass them as arguments to `gl` methods.
+
+Client and server
+
+You can think of everything that runs on the JavaScript side as being a "client", and everything
+that happens behind the WebGL API as being a "server". It's generally (but not 100%) true that
+the client runs on the CPU, and the server runs on the GPU. I'll usually refer to the server as
+"WebGL" - it should be clear from context what I actually mean.
+
+When it comes to efficiency, both the client and the server take time to run, but where you really
+want to look for bottlenecks is in client/server communications, i.e., WebGL API calls. If there's
+a call that you're making every frame of your game, when you could just be making it just once,
+it's probably worth changing it.
+
+On the other hand, if you're not used to working with the GPU, you should probably avoid making
+optimizations right away. It can be pretty counterintuitive what works and what doesn't, so I
+suggest getting some experience first.
+
+WebGL as a state machine
+
+There are very few methods that actually tell WebGL to draw anything, and looking at the draw call
+itself doesn't really tell you what's being drawn. That all depends on the large amount of state
+that WebGL has at any time, and there are a bunch of methods to set the state.
+
+There are several getter and setter methods. They don't really appear in pairs, though, and often a
+single getter corresponds to several setters, and you specify what you want to get or set with one
+of those constants. The getters always start with "get", and the setters don't have a prefix. This
+is probably because you're usually setting a lot more frequently than getting.
+
+	gl.clearColor(0, 0, 0, 1)  // set the clear color
+	var c = gl.getParameter(gl.COLOR_CLEAR_VALUE)  // get the clear color
+
+Shaders
+
+I'm just saying this because it confused me for a long time: shaders do not, in general, have to do
+with shading. They are programs that run when you call a draw method, in order to determine where
+the drawn objects appear and what color they are. Shading is part of that, of course, but just one
+part. I think the name is a bit of misnomer. To compile shaders, you need to pass their source code
+as a string to WebGL.
+
+Shaders are written in GLSL ES (the OpenGL ES Shading Language), not JavaScript. GLSL is kind of a
+cool language. It's really limited and it takes some getting used to, but it has a nifty syntax
+for doing what it does.
+
+
 Lessons are as follows:
 
+1. Creating the WebGL context, clear, viewport, scissor
+2. Creating shaders and attaching them to WebGL programs
+3. Shader uniforms, drawing points with drawArrays
+4. Depth testing and blending
+5. GLSL functions, matrices, and some other stuff
+6. Texture objects, mipmaps, and wrapping options
+7. Texture cube maps
+8. Framebuffer objects
 
+Future lessons will cover:
 
-In 2D graphics, in order to draw a scene, you sort your objects by z-index and just draw them on top
-of each other. In 3D graphics, this is, in general, much harder, because you need to deal with
-complex shapes in many different orientations.
-
-It would be nice if there was a way for fragments that come out of the fragment shader to be sorted
-before being applied to the framebuffer. But for whatever reason, this is not possible. The
-fragments are applied in the order they're called. So you must rely on another tool: depth testing.
-
-In a framebuffer (like the viewport), there are three kinds of buffers: the color buffer, the depth
-buffer, and the stencil buffer. (The stencil buffer is useful for a few effects like portals and
-shadows, but it's kind of advanced, so I won't be covering it.) The color buffer is easy to
-understand. It's the colors you actually see in the viewport. You don't directly view the contents
-of the depth buffer directly, but it's there too.
-
-So what does the depth buffer contain, and how does it help? It contains a value from 0 to 1 for
-each fragment (pixel) that represents the distance from the viewer of the surface covering that
-fragment. 0 is nearest and 1 is farthest. When a new surface is being written to that fragment,
-webGL performs depth testing, and only updates the fragment if the new depth is less than the old
-depth (ie, the new object is closer to the viewer than the existing object).
-
-How is a fragment's depth determined? It's from the z-component of gl_Position. Objects will appear
-if gl_Position.z is between -1 and 1, and this value will be mapped to the range [0, 1] for the
-depth buffer.
-
-
-Here's my short advice:
-
-If you don't have any alpha transparency in your scene whatsoever, enable depth testing (with the
-default depth function of LESS) and leave blending disabled. That's all you need.
-
-If you do need to worry about alpha transparency, use the separated blending function:
-
-	gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, 0, 1)
-	gl.enable(gl.BLEND)
-
-Separate your surfaces into solid and transparent ones, and draw all the solid ones first. If
-possible, sort your transparent surfaces from far to near and draw them in that order.
-
-While drawing the transparent surfaces, you can optionally disabled the depth mask:
-
-	gl.depthMask(false)
-
-Whether this produces better results depends on how transparent your transparent surfaces are, and
-how they cover each other. I recommend trying it both ways.
-
+* Shader attributes and varyings
+* Drawing more than one point at a time
+* Drawing lines
+* Drawing triangles
+* Element array buffers
