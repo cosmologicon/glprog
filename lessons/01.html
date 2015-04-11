@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <body>
-<p>Create a 854x480 canvas filled green, with a 120x120 box filled blue near the lower left corner.
+<p>Create a 854x480 canvas filled blue, with two 200x200 boxes colored red and yellow.
 <script src="util.js"></script>
 <script>
 
@@ -30,19 +30,20 @@ gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
 console.log(gl.getParameter(gl.VIEWPORT))
 
 
-// COLOR THE ENTIRE CANVAS GREEN
+// COLOR THE ENTIRE CANVAS BLUE
 
-// Set the clear color to green (0, 0.5, 0)
-gl.clearColor(0, 0.5, 0, 1)
+// Set the clear color to blue (0, 0, 0.5)
+// The last number (1) is the alpha value. 1 = completely opaque.
+gl.clearColor(0, 0, 0.5, 1)
 
-// Output: [0, 0.5, 0, 1]
+// Output: [0, 0, 1, 1]
 console.log(gl.getParameter(gl.COLOR_CLEAR_VALUE))
 
 // Clear the canvas (set every pixel to the clear color)
 gl.clear(gl.COLOR_BUFFER_BIT)
 
 
-// COLOR A BOX BLUE
+// COLOR A BOX RED
 
 // Output: false
 console.log(gl.getParameter(gl.SCISSOR_TEST))
@@ -54,15 +55,25 @@ gl.enable(gl.SCISSOR_TEST)
 // Output: true
 console.log(gl.getParameter(gl.SCISSOR_TEST))
 
-// Restrict the draw region to a 120x120 box with lower-left corner at (100, 10)
-gl.scissor(100, 10, 120, 120)
-// Output: [100, 10, 120, 120]
+// Restrict the draw region to a 200x200 box with lower-left corner at (160, 10),
+// near the bottom.
+gl.scissor(160, 10, 200, 200)
+// Output: [160, 10, 200, 200]
 console.log(gl.getParameter(gl.SCISSOR_BOX))
 
-// Clear the scissor area to blue.
-gl.clearColor(0, 0, 0.5, 1)
+// Clear the scissor area to red.
+gl.clearColor(0.5, 0, 0, 1)
 gl.clear(gl.COLOR_BUFFER_BIT)
 
+
+// NOW FOR A YELLOW BOX
+
+// (260, 110) is 100 pixels up and to the right from (160, 10).
+gl.scissor(260, 110, 200, 200)
+gl.clearColor(0.5, 0.5, 0, 1)
+gl.clear(gl.COLOR_BUFFER_BIT)
+
+// Disable scissor testing - any subsequent draws can access the entire viewport.
 gl.disable(gl.SCISSOR_TEST)
 
 </script>

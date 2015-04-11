@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <body>
-<p>Build a trivial GL program. Nothing will appear on the canvas.
+<p>Build a trivial GL program. Nothing will appear on the viewport.
 <script src="util.js"></script>
 <script>
 var gl = util.getContext(854, 480)
@@ -19,7 +19,7 @@ console.log(gl.isShader(vshader))
 // Output: a Number equal to gl.VERTEX_SHADER
 console.log(gl.getShaderParameter(vshader, gl.SHADER_TYPE))
 // Set the source code for the shader
-gl.shaderSource(vshader, "void main() { gl_Position = vec4(0.0, 0.0, 0.0, 1.0); }")
+gl.shaderSource(vshader, "void main() { gl_Position = vec4(0.0); }")
 // Output: the source code for this shader
 console.log(gl.getShaderSource(vshader))
 // Compile the shader
@@ -49,7 +49,7 @@ gl.linkProgram(prog)
 // Output: true
 console.log(gl.getProgramParameter(prog, gl.LINK_STATUS))
 
-// Once a vertex and fragment shader are both attached, link the program.
+// Optional: validate the program.
 gl.validateProgram(prog)
 // Output: true
 console.log(gl.getProgramParameter(prog, gl.VALIDATE_STATUS))
