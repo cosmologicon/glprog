@@ -124,8 +124,7 @@ var util = {
 		}
 	},
 
-	// Draw a single point, first setting any given uniforms
-	drawPoint: function (gl, uniforms) {
+	setUniforms: function (gl, uniforms) {
 		uniforms = uniforms || {}
 		for (var uniformname in uniforms) {
 			var value = uniforms[uniformname]
@@ -135,6 +134,10 @@ var util = {
 				this.setUniform(gl, uniformname, value)
 			}
 		}
+	},
+
+	// Draw a single point
+	drawPoint: function (gl) {
 		gl.drawArrays(gl.POINTS, 0, 1)
 	},
 }

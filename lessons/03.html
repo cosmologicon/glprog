@@ -4,8 +4,8 @@
 20px yellow on the positive y axis.
 <script src="util.js"></script>
 <script type="x-shader/x-vertex" id="vsource">
-uniform mediump vec2 pos;
 uniform mediump float size;
+uniform highp vec2 pos;
 void main() {
 	gl_Position = vec4(pos, 0.0, 1.0);
 	gl_PointSize = size;
