@@ -1,6 +1,13 @@
 // 
 
 var util = {
+
+	getEnumName: function (gl, value) {
+		for (var name in gl) {
+			if (name.toUpperCase() == name && gl[name] == value) return name
+		}
+		return null
+	},
 	// Create a canvas element with an associated webGL context and return the context.
 	// optionally set the width and height of the canvas in pixels.
 	getContext: function (width, height) {

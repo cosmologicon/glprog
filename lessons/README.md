@@ -58,8 +58,8 @@ Client and server
 
 You can think of everything that runs on the JavaScript side as being a "client", and everything
 that happens behind the WebGL API as being a "server". It's generally (but not 100%) true that
-the client runs on the CPU, and the server runs on the GPU. I'll usually refer to the server as
-"WebGL" - it should be clear from context what I actually mean.
+the client runs on the CPU, and the server runs on the GPU. I'll usually refer to the client as
+"JavaScript", and the server as "WebGL" - it should be clear from context what I actually mean.
 
 When it comes to efficiency, both the client and the server take time to run, but where you really
 want to look for bottlenecks is in client/server communications, i.e., WebGL API calls. If there's

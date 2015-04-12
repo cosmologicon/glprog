@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<body>
+<p>Drawing multiple points in parallel with drawArrays. A 100px white circular point is at the
+center. Rotating around it are 100 red, yellow, and blue points. The red points are all 15px in
+size, while the yellow and blue points have various sizes.
+<script src="util.js"></script>
+<script type="x-shader/x-vertex" id="vsource">
+uniform float rotation;
+attribute vec3 gpos;
+attribute float pointsize;
+
+// Returns a 2x2 rotation matrix corresponding to the given angle.
+mat2 R(in float angle) {
+	float S = sin(angle), C = cos(angle);
+	return mat2(C, S, -S, C);
+}
+void main() {
+	vec3 clippos = gpos;
+	clippos.xz *= R(rotation);  // Rotate around the y (vertical) axis.
+	clippos.x *= 480.0 / 854.0;
+	gl_Position = vec4(clippos, 1.0);
+
+	gl_PointSize = pointsize;
+}
+</script>
+<script type="x-shader/x-fragment" id="fsource">
+precision mediump float;
+uniform vec3 color;
+void main() {
+	if (length(gl_PointCoord * 2.0 - 1.0) > 1.0) discard;
+	gl_FragColor = vec4(color, 1.0);
+}
+</script>
+<script>
+var tau = 2 * Math.PI
+var gl = util.getContext(854, 480)
+util.clear(gl, [0, 0, 0])
+
+// A random set of [x, y, z] coordinates within the sphere of radius 1
+function randompos() {
+	var x = Math.random() * 2 - 1
+	var y = Math.random() * 2 - 1
+	var z = Math.random() * 2 - 1
+	if (x * x + y * y + z * z > 1) return randompos()
+	return [x, y, z]
+}
+// Generate a random point size between 5 and 30
+function randomsize() {
+	return Math.pow(Math.random(), 3) * 25 + 5
+}
+
+// Generate a length-300 Array containing the coordinates of 100 red points.
+var reddata = []
+for (var i = 0 ; i < 100 ; ++i) {
+	reddata = reddata.concat(randompos())
+}
+// JavaScript tip: could also do
+// var reddata = [].concat.apply([], Array.apply(null, {length: 100}).map(randompos))
+
+// Load the coordinates into a Float32Array, and load that into a buffer object.
+var redarray = new Float32Array(reddata)
+var redbuffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, redbuffer)
+gl.bufferData(gl.ARRAY_BUFFER, redarray, gl.STATIC_DRAW)
+
+// Optional: the data is no longer needed on the JavaScript side.
+delete reddata, redarray
+
+
+// Generate a length-800 Array containing interleaved data for yellow and blue points.
+// The data is [x, y, z, point size] for each of 200 points.
+var ybdata = []
+for (var i = 0 ; i < 200 ; ++i) {
+	ybdata = ybdata.concat(randompos())
+	ybdata.push(randomsize())
+}
+var ybarray = new Float32Array(ybdata)
+var ybbuffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, ybbuffer)
+gl.bufferData(gl.ARRAY_BUFFER, ybarray, gl.STATIC_DRAW)
+delete ybdata, ybarray
+
+var prog = util.buildProgram(gl, vsource.text, fsource.text)
+gl.useProgram(prog)
+gl.enable(gl.DEPTH_TEST)
+
+console.log(gl.getProgramParameter(prog, gl.ACTIVE_ATTRIBUTES))
+console.log(gl.getActiveAttrib(prog, 0))
+console.log(gl.getActiveAttrib(prog, 1))
+
+var gpos = gl.getAttribLocation(prog, "gpos")
+var pointsize = gl.getAttribLocation(prog, "pointsize")
+
+function update() {
+	util.clear(gl, [0, 0, 0])
+	var theta = 0.8 * 0.001 * Date.now() % tau
+	util.setUniform(gl, "rotation", theta)
+
+	// A single large white point at the center
+	util.setUniforms(gl, {color: [1, 1, 1]})
+	// Disable array access for both attributes.
+	gl.disableVertexAttribArray(gpos)
+	gl.disableVertexAttribArray(pointsize)
+	// Set the generic attribute values (similar to uniforms)
+	gl.vertexAttrib1f(pointsize, 100)
+	gl.vertexAttrib3fv(gpos, [0, 0, 0])
+	// Draw 1 point
+	gl.drawArrays(gl.POINTS, 0, 1)
+
+	// 100 red points with a fixed size
+	util.setUniforms(gl, {color: [1, 0, 0]})
+	// Enable array access for the gpos attribute
+	gl.enableVertexAttribArray(gpos)
+	gl.bindBuffer(gl.ARRAY_BUFFER, redbuffer)
+	// Point the gpos attribute to beginning of the array buffer
+	gl.vertexAttribPointer(gpos, 3, gl.FLOAT, false, 0, 0)
+	// The pointsize attribute still has array access disabled, and uses its generic value.
+	gl.vertexAttrib1f(pointsize, 15)
+	// Draw 100 points
+	gl.drawArrays(gl.POINTS, 0, 100)
+
+	// 100 yellow points with various sizes
+	gl.enableVertexAttribArray(gpos)
+	gl.enableVertexAttribArray(pointsize)
+	util.setUniforms(gl, {color: [1, 1, 0]})
+	gl.bindBuffer(gl.ARRAY_BUFFER, ybbuffer)
+	gl.vertexAttribPointer(gpos, 3, gl.FLOAT, false, 4*4, 0*4)
+	gl.vertexAttribPointer(pointsize, 1, gl.FLOAT, false, 4*4, 3*4)
+	gl.drawArrays(gl.POINTS, 0, 100)
+
+	// 100 blue points using the same buffer
+	util.setUniforms(gl, {color: [0, 0, 1]})
+	gl.drawArrays(gl.POINTS, 100, 100)
+
+	// An alternate way to draw the blue points is this.
+	// Specify the offsets of the 
+//	gl.vertexAttribPointer(gpos, 3, gl.FLOAT, false, 4*4, (400+0)*4)
+//	gl.vertexAttribPointer(pointsize, 1, gl.FLOAT, false, 4*4, (400+3)*4)
+//	gl.drawArrays(gl.POINTS, 0, 100)
+
+
+}
+setInterval(update, 1000 / 60)
+
+
+</script>
+
