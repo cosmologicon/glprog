@@ -16,8 +16,11 @@ values of 100%, 75%, 50%, and 25%. The settings for the columns are, from left t
 
 <script src="util.js"></script>
 <script type="x-shader/x-vertex" id="vsource">
-uniform mediump vec3 viewpos;
-uniform mediump vec3 viewportsize;
+// Viewport coordinates of point, in range (0, 0, 0) to (854, 480, 1000)
+uniform highp vec3 viewpos;
+// Size of the viewport in pixels
+uniform highp vec3 viewportsize;
+// Point size in pixels
 uniform mediump float size;
 void main() {
 	// Scale from view coordinates to clip coordinates.
@@ -40,18 +43,23 @@ util.clear(gl, [0, 0, 0])
 
 var prog = util.buildProgram(gl, vsource.text, fsource.text)
 gl.useProgram(prog)
-util.setUniformv(gl, "viewportsize", [854, 480, 1000])
-util.setUniform(gl, "size", 60)
+util.setUniforms(gl, {viewportsize: [854, 480, 1000], size: 60})
 
+// Draw three points.
 // The points are drawn in the order red, yellow, blue, with red closest to the viewer and blue
 // farthest. (Whether they actually appear like that depends on the depth settings.)
 function drawpoints(x0, y0, alpha) {
 	util.setUniform(gl, "alpha", alpha)
-	util.drawPoint(gl, {viewpos: [x0, y0, 500], color: [1, 0, 0]})
-	util.drawPoint(gl, {viewpos: [x0+15, y0-15, 600], color: [1, 1, 0]})
-	util.drawPoint(gl, {viewpos: [x0+30, y0-30, 700], color: [0, 0, 1]})
+	util.setUniforms(gl, {viewpos: [x0, y0, 500], color: [1, 0, 0]})
+	util.drawPoint(gl)
+	util.setUniforms(gl, {viewpos: [x0+15, y0-15, 600], color: [1, 1, 0]})
+	util.drawPoint(gl)
+	util.setUniforms(gl, {viewpos: [x0+30, y0-30, 700], color: [0, 0, 1]})
+	util.drawPoint(gl)
 }
+// Draw a column of four sets of three points with different alpha values.
 function drawcolumn(y0) {
+	// Vertical white stripe
 	util.clear(gl, [1, 1, 1], [y0 + 5, 0, 20, 480])
 	drawpoints(y0, 400, 1)
 	drawpoints(y0, 300, 0.75)
