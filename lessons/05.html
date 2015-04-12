@@ -5,10 +5,9 @@ smooth edges and lightining from the top left. Black edge artifacts can be seen 
 points are in front.
 <script src="util.js"></script>
 <script type="x-shader/x-vertex" id="vsource">
-uniform highp float rotation;
-uniform mediump vec3 gamepos;
-uniform mediump vec3 viewportsize;
-uniform mediump float pointsize;
+uniform float rotation;
+// Indices running 0 through 4 for x, y, and z coordinates.
+uniform mediump ivec3 index;
 
 // Returns a 2x2 rotation matrix corresponding to the given angle.
 mat2 R(in float angle) {
@@ -17,14 +16,16 @@ mat2 R(in float angle) {
 }
 
 // The amount to tilt toward the viwer, and the corresponding rotation matrix.
-const highp float tilt = 0.4;
+const float tilt = 0.4;
+const vec3 viewportsize = vec3(854.0, 480.0, 1000.0);
+const float pointsize = 50.0;
 mat2 tiltmatrix = R(tilt);
 void main() {
-	vec3 gpos = gamepos;
-	gpos.xz *= R(rotation);  // Rotate around the y (vertical) axis.
-	gpos.yz *= tiltmatrix;  // Rotate around the x (horizontal) axis toward the viweer.
-	mediump float gamescale = 0.3 * viewportsize.y;
-	vec3 viewpos = viewportsize * 0.5 + gpos * gamescale;
+	vec3 gamepos = (vec3(index) - 2.0) / 2.0;
+	gamepos.xz *= R(rotation);  // Rotate around the y (vertical) axis.
+	gamepos.yz *= tiltmatrix;  // Rotate around the x (horizontal) axis toward the viweer.
+	float gamescale = 0.3 * viewportsize.y;
+	vec3 viewpos = viewportsize * 0.5 + gamepos * gamescale;
 
 	// Scale from view coordinates to clip coordinates.
 	// Points appear if each of their clip coordinates are in the range [-1, 1].
@@ -37,32 +38,37 @@ void main() {
 </script>
 <script type="x-shader/x-fragment" id="fsource">
 // Fragment shader: apply the given color, circular shape, lighting, and edge shading.
-uniform mediump vec3 color;
+precision mediump float;
+
+// Indices running 0 through 4 for r, g, and b color components.
+uniform ivec3 index;
 
 // A unit vector pointing in the direction of the light source.
-mediump vec3 lightpos = normalize(vec3(-1.0, -1.0, 1.0));
+vec3 lightpos = normalize(vec3(-1.0, -1.0, 1.0));
 void main() {
 	// r is a unit vector pointing out from the center of a sphere.
 	// We only have the x and y position to start with (from gl_PointCoord), so we need to
 	// calculate the z component using x^2 + y^2 + z^2 = 1.
-	mediump vec3 r;
+	vec3 r;
 	r.xy = gl_PointCoord * 2.0 - 1.0;
-	mediump float zsquared = 1.0 - dot(r.xy, r.xy);
+	float zsquared = 1.0 - dot(r.xy, r.xy);
 	if (zsquared < 0.0) discard;  // Fragment is outside the circle.
 	r.z = sqrt(zsquared);
+
+	// Lighting. shade is a factor related to the unit vector r.
+	float shade = 0.4 + 0.6 * dot(r, lightpos);
+	shade = clamp(shade, 0.0, 1.0);  // Restrict shade to the range [0, 1].
+	//shade = 1.0;  // Uncomment to disable lighting.
 
 	// edgefade is a factor between 0 and 1, depending on r.z, which is 0 at the edge.
 	// smoothstep here means that edgefade = 0 when r.z <= 0, and edgefade = 1 when r.z >= 0.25,
 	// and it's smoothly interpolated between 0 and 1 when 0 < r.z < 0.25.
-	mediump float edgefade = smoothstep(0.0, 0.25, r.z);
+	float edgefade = smoothstep(0.0, 0.25, r.z);
 	//edgefade = 1.0;  // Uncomment this to disable edge smoothing.
 
-	// Lighting. shade is a factor related to the unit vector r.
-	mediump float shade = 0.4 + 0.6 * dot(r, lightpos);
-	shade = clamp(shade, 0.0, 1.0);  // Restrict shade to the range [0, 1].
-	//shade = 1.0;  // Uncomment to disable lighting.
-
-	gl_FragColor = vec4(color * shade, edgefade);
+	vec3 color = (vec3(index) + 1.0) / 6.0;
+	color *= shade;
+	gl_FragColor = vec4(color, edgefade);
 }
 </script>
 <script>
@@ -76,8 +82,6 @@ gl.enable(gl.DEPTH_TEST)
 
 var prog = util.buildProgram(gl, vsource.text, fsource.text)
 gl.useProgram(prog)
-util.setUniformv(gl, "viewportsize", [854, 480, 1000])
-util.setUniform(gl, "pointsize", 50)
 
 function update() {
 	util.clear(gl, [0, 0, 0])
@@ -86,9 +90,8 @@ function update() {
 	for (var i = 0 ; i < 5 ; ++i) {
 		for (var j = 0 ; j < 5 ; ++j) {
 			for (var k = 0 ; k < 5 ; ++k) {
-				var x = (i - 2) / 2, y = (j - 2) / 2, z = (k - 2) / 2
-				var r = (i + 1) / 5, g = (j + 1) / 5, b = (k + 1) / 5
-				util.drawPoint(gl, {gamepos: [x, y, z], color: [r, g, b]})
+				util.setUniforms(gl, {index: [i, j, k]})
+				util.drawPoint(gl)
 			}
 		}
 	}
