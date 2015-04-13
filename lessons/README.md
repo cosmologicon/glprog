@@ -127,12 +127,11 @@ Lesson listing
 6. Texture objects, mipmaps, and wrapping options
 7. Texture cube maps
 8. Framebuffer objects
+9. Shader attributes and multiple points
 
 To be covered in future lessons
 -------------------------------
 
-* Shader attributes
-* Drawing more than one point at a time
 * Drawing lines
 * Shader varyings
 * Drawing triangles
