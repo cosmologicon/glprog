@@ -1,8 +1,27 @@
 # glprog lessons
 
-These lessons are aimed at people who are not already familiar with OpenGL, and don't particularly
-want to learn any kind of OpenGL other than WebGL. I'm also assuming you already know JavaScript,
-and some vector math.
+These are lessons for learning the fundamentals of WebGL for people who know JavaScript and not
+OpenGL. If this is not what you're looking for, there may be something better for you.
+
+* These lessons assume you don't know OpenGL. If you already know OpenGL, you should learn WebGL
+from....
+* These lessons assume you don't plan to ever learn other kinds of OpenGL besides WebGL. If you plan
+to use other OpenGL implementations some day, it might be easier to learn OpenGL first, which you
+can do using....
+* These lessons assume you want to get down to the fundamentals. If you're okay with using a
+high-level library to abstract away the details of WebGL, there are a couple good options you should
+use instead: ...
+* If you're from the future, there's probably something better. These lessons cover WebGL 1.0, which
+is widely supported as of May 2015, and which nothing has replaced. If you're from 2017 or later, I
+expect WebGL 2.0 or something else to be widely supported, so you should go learn that.
+* You need to know JavaScript for these lessons. If you want to learn JavaScript first, please
+see....
+* You need some familiarity with the basics of 2D drawing with the HTML5 canvas element. If you
+don't have any experience with that, please see...
+* You need what in the USA would be a high school level understanding of Algebra 2 and Trigonometry.
+If you don't know how matrix multiplication works, or you don't know the parametric equation for the
+unit circle, low level 3D graphics are going to be difficult. I recommend taking a course. I've
+heard good things about Khan Academy.
 
 Background
 ==========
@@ -18,7 +37,7 @@ by beginners. That means that if you find a tutorial written for (non-ES) OpenGL
 good chance it won't work in WebGL. I've also found that most of the tutorials for OpenGL ES or
 WebGL assume you already know the basics of OpenGL.
 
-So this tutorial is supposed to fill the gap, for people who don't know the basics, but want to
+So these lessons are supposed to fill the gap, for people who don't know the basics, but want to
 learn them for WebGL.
 
 Helpful concepts
@@ -119,20 +138,20 @@ code moved into `util.js`, and most of the detailed comments removed.
 Lesson listing
 --------------
 
-1. Creating the WebGL context, clear, viewport, scissor
-2. Creating shaders and attaching them to WebGL programs
-3. Shader uniforms, drawing points with `drawArrays`
-4. Depth testing and blending
-5. GLSL functions, matrices, and some other stuff
-6. Texture objects, mipmaps, and wrapping options
+1. Creating the WebGL context, `clear`, `viewport`, `scissor`
+2. Shaders, WebGL programs
+3. Shader uniforms, drawing single points
+4. Depth testing, blending
+5. Shader functions, matrices, other GLSL stuff
+6. Texture objects, mipmaps, texture wrapping options
 7. Texture cube maps
 8. Framebuffer objects
-9. Shader attributes and multiple points
+9. Shader attributes, drawing multiple points
+10. Drawing lines
 
 To be covered in future lessons
 -------------------------------
 
-* Drawing lines
 * Shader varyings
 * Drawing triangles
 * Element array buffers
