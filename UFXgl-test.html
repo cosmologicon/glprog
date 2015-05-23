@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<script src="UFXgl.js"></script>
+<script type="x-shader/x-vertex" id="vshader">
+uniform float psize;
+void main() {
+	gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+	gl_PointSize = psize;
+}
+</script>
+<script type="x-shader/x-vertex" id="fshader">
+precision highp float;
+uniform vec4 color;
+void main() {
+	gl_FragColor = color;
+}
+</script>
+<body>
+<canvas id=canvas></canvas>
+</body>
+<script>
+var gl = UFX.gl(canvas)
+gl.addProgram("fill", "vshader", "fshader")
+gl.clearColor(0, 0, 0, 1)
+gl.clear(gl.COLOR_BUFFER_BIT)
+gl.progs.fill.use()
+gl.progs.fill.set.psize(50)
+gl.progs.fill.set.color([0, 1, 0, 1])
+gl.drawArrays(gl.POINTS, 0, 1)
+gl.progs.fill.set({ psize: 20, color: [1, 0, 0, 1] })
+gl.drawArrays(gl.POINTS, 0, 1)
+
+</script>
+
