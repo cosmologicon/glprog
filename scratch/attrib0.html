@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<title>Minimal example: WebGL without attribute 0</title>
+<canvas id=canvas></canvas>
+<script>
+var canvas = document.getElementById("canvas")
+canvas.width = canvas.height = 256
+var gl = canvas.getContext("webgl")
+var prog = gl.createProgram()
+var vshader = gl.createShader(gl.VERTEX_SHADER)
+gl.shaderSource(vshader, "void main() { gl_Position = vec4(vec3(0.0), 1.0); gl_PointSize = 256.0; }")
+gl.compileShader(vshader)
+gl.attachShader(prog, vshader)
+var fshader = gl.createShader(gl.FRAGMENT_SHADER)
+gl.shaderSource(fshader, "void main() { gl_FragColor = vec4(gl_FragCoord.xy / 256.0, 0.0, 1.0); }")
+gl.compileShader(fshader)
+gl.attachShader(prog, fshader)
+gl.linkProgram(prog)
+gl.validateProgram(prog)
+gl.useProgram(prog)
+gl.drawArrays(gl.POINTS, 0, 1)
+</script>
