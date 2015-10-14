@@ -1,30 +1,24 @@
 <!DOCTYPE html>
 <body>
-<p>A 5x5x5 rotating cube of points with various colors and positions. The points are circular with
-lightining from the top left. When the mouse is moved over the viewport, a circular region near the
-cursor has a negative color filter applied.
+<p>A 5x5 grid of points with various colors and positions. (Actually a 5x5x5 cube of points, but we
+can't tell yet.)
 <script src="util.js"></script>
 <script type="x-shader/x-vertex" id="vsource">
-uniform float rotation;
-// Indices running 0 through 4 for x, y, and z coordinates.
+// Indices specifying the point's position within the cube.
+// Runs from (-2, -2, -2) in one corner of the cube to (2, 2, 2) in the opposite corner.
 uniform mediump ivec3 index;
 
-// Returns a 2x2 rotation matrix corresponding to the given angle.
-mat2 R(in float angle) {
-	float S = sin(angle), C = cos(angle);
-	return mat2(C, S, -S, C);
-}
+// Viewport size in pixels.
+const vec3 viewportsize = vec3(854.0, 480.0, 854.0);
+// Pixels per game unit.
+const float gamescale = viewportsize.y / 8.0;
 
-// The amount to tilt toward the viwer, and the corresponding rotation matrix.
-const float tilt = 0.4;
-mat2 tiltmatrix = R(tilt);
-const vec3 viewportsize = vec3(854.0, 480.0, 800.0);
+// Base size of points.
 const float pointsize = 50.0;
 void main() {
-	vec3 gamepos = (vec3(index) - 2.0) / 2.0;
-	gamepos.xz *= R(rotation);  // Rotate around the y (vertical) axis.
-	gamepos.yz *= tiltmatrix;  // Rotate around the x (horizontal) axis toward the viweer.
-	float gamescale = 0.24 * viewportsize.y;
+	// Convert index to a floating-point vector.
+	vec3 gamepos = vec3(index);
+	// Transform into view coordinates (pixels going from (0, 0, 0) to (854, 480, 480)).
 	vec3 viewpos = viewportsize * 0.5 + gamepos * gamescale;
 
 	// Scale from view coordinates to clip coordinates.
@@ -32,97 +26,33 @@ void main() {
 	vec3 clippos = viewpos / viewportsize * 2.0 - 1.0;
 	gl_Position = vec4(clippos, 1.0);
 
-	float pfactor = 1.0 + 0.7 * clippos.z;
-	// Uncomment the following line to disable perspective transformation.
-	// This is known as orthographic perspective.
-	// pfactor = 1.0;
-
-	// Make it so that points farther from the viewer are smaller.
-	gl_PointSize = pointsize / pfactor;
-
-	// Make it so that the distances between points are smaller when farther from the viewer,
-	// matching perspective.
-	gl_Position.xyz /= pfactor;
-	// Note: the following is an alternative to the above line. It accomplishes the same thing.
-	// (This is one thing homogeneous coordinates are good at.)
-	//gl_Position.w *= pfactor;
+	gl_PointSize = pointsize;
 }
 </script>
 <script type="x-shader/x-fragment" id="fsource">
-// Fragment shader: apply the given color, circular shape, lighting, and edge shading.
 precision mediump float;
 
-// Indices running 0 through 4 for r, g, and b color components.
+// Indices running -2 through 2 specifying the point's position within the cube.
 uniform ivec3 index;
 
-// Mouse position in pixels.
-uniform vec2 mpos;
-
-// A unit vector pointing in the direction of the light source.
-vec3 lightpos = normalize(vec3(-1.0, -1.0, 1.0));
 void main() {
-	// r is a unit vector pointing out from the center of a sphere.
-	// We only have the x and y position to start with (from gl_PointCoord), so we need to
-	// calculate the z component using x^2 + y^2 + z^2 = 1.
-	vec3 r;
-	r.xy = gl_PointCoord * 2.0 - 1.0;
-	float zsquared = 1.0 - dot(r.xy, r.xy);
-	if (zsquared < 0.0) discard;  // Fragment is outside the circle.
-	r.z = sqrt(zsquared);
-
-	vec3 color = (vec3(index) + 1.0) / 6.0;
-
-	// Lighting. shade is a factor related to the unit vector r.
-	float shade = 0.4 + 0.6 * dot(r, lightpos);
-	shade = clamp(shade, 0.0, 1.0);  // Restrict shade to the range [0, 1].
-	//shade = 1.0;  // Uncomment to disable lighting.
-	color *= shade;
-
-	// Make points that are farther from the viewer darker.
-	// gl_FragCoord.z ranges from 0 (closest) to 1 (farthest).
-	color *= 1.0 - gl_FragCoord.z;
-
-	// Apply a negative color filter for points within 100 pixels of the mouse position.
-	if (distance(gl_FragCoord.xy, mpos) < 100.0) {
-		color = 1.0 - color;
-	}
+	// Base color of this point.
+	vec3 color = 0.5 + vec3(index) / 6.0;
 	gl_FragColor = vec4(color, 1.0);
 }
 </script>
 <script>
-var tau = 2 * Math.PI
-
-// (mousex, mousey) is the mouse position in pixels as measured from the lower left.
-var mousex = 0, mousey = 0
-document.onmousemove = function (event) {
-	mousex = event.pageX - gl.canvas.offsetLeft
-	// Invert because y event coordinates start at the top, not the bottom.
-	mousey = gl.canvas.height - (event.pageY - gl.canvas.offsetTop)
-}
-
-
 var gl = util.getContext(854, 480)
-util.clear(gl, [0, 0, 0])
-gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, 0, 1)
-gl.enable(gl.BLEND)
-gl.enable(gl.DEPTH_TEST)
-
+gl.enable(gl.DEPTH_TEST)  // We need depth testing but we don't need blending.
 var prog = util.buildProgram(gl, vsource.text, fsource.text)
 gl.useProgram(prog)
 
 function update() {
 	util.clear(gl, [0, 0, 0])
-	// theta is an angle that increases by 0.3 radians per second.
-	// Modding it by tau ensures that it remains fairly small in magnitude, while still being
-	// continuous for the purpose of trigonometric functions. (Unlike JavaScript, shaders don't
-	// necessarily have enough precision to represent numbers as big as Date.now() while maintaining
-	// the precision we want here.)
-	var theta = 0.3 * 0.001 * Date.now() % tau
-	util.setUniform(gl, "rotation", theta)
-	util.setUniform(gl, "mpos", mousex, mousey)
-	for (var i = 0 ; i < 5 ; ++i) {
-		for (var j = 0 ; j < 5 ; ++j) {
-			for (var k = 0 ; k < 5 ; ++k) {
+	// Iterate over each of the 5x5x5 points in the grid and update the index uniform.
+	for (var i = -2 ; i <= 2 ; ++i) {
+		for (var j = -2 ; j <= 2 ; ++j) {
+			for (var k = -2 ; k <= 2 ; ++k) {
 				util.setUniforms(gl, {index: [i, j, k]})
 				util.drawPoint(gl)
 			}

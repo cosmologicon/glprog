@@ -6,17 +6,20 @@ values of 100%, 75%, 50%, and 25%. The settings for the columns are, from left t
 <ol>
 <li>No depth testing and no blending.
 <li>Standard depth testing and no blending.
-<li>No depth testing and standard blending.
-<li>Standard depth testing and standard blending.
-<li>No depth testing and separated blending.
-<li>No depth testing and standard blending, with alpha color mask disabled.
-<li>Standard depth testing and standard blending, with alpha color mask disabled.
-<li>Standard depth testing and standard blending, with alpha color mask and depth mask disabled.
+<li>No depth testing and combined blending.
+<li>OpenGL recommendation: Standard depth testing and combined blending.
+<li>WebGL recommendation: No depth testing and separated blending.
+<li>No depth testing and combined blending, with alpha color mask disabled.
+<li>Standard depth testing and combined blending, with alpha color mask disabled.
+<li>Standard depth testing and combined blending, with alpha color mask and depth mask disabled.
 </ol>
 
 <script src="util.js"></script>
 <script type="x-shader/x-vertex" id="vsource">
-// Viewport coordinates of point, in range (0, 0, 0) to (854, 480, 1000)
+// Vertex shader source
+
+// Viewport coordinates of point, in range (0, 0, 0) to (854, 480, 1000).
+// viewpos.z will determine the point's depth, with 0 closest and 1000 farthest.
 uniform highp vec3 viewpos;
 // Size of the viewport in pixels
 uniform highp vec3 viewportsize;
@@ -31,7 +34,11 @@ void main() {
 }
 </script>
 <script type="x-shader/x-fragment" id="fsource">
+// Fragment shader source
+
+// Color of the point
 uniform mediump vec3 color;
+// Alpha transparency value. 0 = transparent, 1 = opaque
 uniform mediump float alpha;
 void main() {
 	gl_FragColor = vec4(color, alpha);
@@ -58,29 +65,27 @@ function drawpoints(x0, y0, alpha) {
 	util.drawPoint(gl)
 }
 // Draw a column of four sets of three points with different alpha values.
-function drawcolumn(y0) {
+function drawcolumn(x0) {
 	// Vertical white stripe
-	util.clear(gl, [1, 1, 1], [y0 + 5, 0, 20, 480])
-	drawpoints(y0, 400, 1)
-	drawpoints(y0, 300, 0.75)
-	drawpoints(y0, 200, 0.5)
-	drawpoints(y0, 100, 0.25)
+	util.clear(gl, [1, 1, 1], [x0 + 5, 0, 20, 480])
+	drawpoints(x0, 400, 1)
+	drawpoints(x0, 300, 0.75)
+	drawpoints(x0, 200, 0.5)
+	drawpoints(x0, 100, 0.25)
 }
 
 // Output: the number of bits in your depth buffer (at least 16)
-console.log(gl.getParameter(gl.DEPTH_BITS))
+console.log("Precision of depth buffer in bits:", gl.getParameter(gl.DEPTH_BITS))
 // Output: [0, 1]
-console.log(gl.getParameter(gl.DEPTH_RANGE))
+console.log("Range of depth buffer values:", gl.getParameter(gl.DEPTH_RANGE))
 // Output: true
-console.log(gl.getParameter(gl.DEPTH_WRITEMASK))
+console.log("Whether the depth buffer can be written to:", gl.getParameter(gl.DEPTH_WRITEMASK))
 // Output: 1
-console.log(gl.getParameter(gl.DEPTH_CLEAR_VALUE))
+console.log("Value that the depth buffer is cleared to:", gl.getParameter(gl.DEPTH_CLEAR_VALUE))
 // Output: gl.LESS
-console.log(gl.getParameter(gl.DEPTH_FUNC))
+console.log("Depth function (should be %d): %d", gl.LESS, gl.getParameter(gl.DEPTH_FUNC))
 // Output: false
-console.log(gl.getParameter(gl.DEPTH_TEST))
-
-//gl.depthRange(0, 1)
+console.log("Is depth testing enabled:", gl.getParameter(gl.DEPTH_TEST))
 
 // Uncommenting the following two lines will prevent the blue point from being drawn in columns
 // where depth testing is enabled, by filling the depth buffer with a value corresponding to a depth
@@ -97,23 +102,22 @@ gl.enable(gl.DEPTH_TEST)
 gl.depthFunc(gl.LESS)
 drawcolumn(160)
 
-// Column 3: no depth testing and standard blending.
+// Column 3: no depth testing and OpenGL-standard blending.
 gl.disable(gl.DEPTH_TEST)
 gl.enable(gl.BLEND)
-// gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD)
 gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 drawcolumn(260)
 
-// Column 4: standard depth testing and standard blending.
+// Column 4: standard depth testing and OpenGL-standard blending.
 gl.enable(gl.DEPTH_TEST)
 drawcolumn(360)
 
-// Column 5: no depth testing and separated blending.
-gl.disable(gl.DEPTH_TEST)
+// Column 5: standard depth testing and separated blending.
 gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE)
 drawcolumn(460)
 
 // Column 6: no depth testing and standard blending, alpha color mask disabled.
+gl.disable(gl.DEPTH_TEST)
 gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 gl.colorMask(true, true, true, false)
 drawcolumn(560)

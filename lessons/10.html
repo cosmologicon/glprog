@@ -1,136 +1,172 @@
 <!DOCTYPE html>
 <body>
-<p>Drawing Lines
+<p>Framebuffer objects. A 4x4 grid of colored spheres shows dynamic laminar and specular lighting,
+following the mouse cursor.
 <script src="util.js"></script>
 <script type="x-shader/x-vertex" id="vsource">
-uniform vec2 center;
-uniform float rotation;
-attribute vec2 pos;
-
-mat2 R(in float angle) {
-	float S = sin(angle), C = cos(angle);
-	return mat2(C, S, -S, C);
-}
+// Simple vertex shader to be used with each of the fragment shaders.
+uniform mediump vec2 pos;
+uniform lowp float pointsize;
 void main() {
-	vec2 viewpos = center + pos * R(rotation);
-	gl_Position.xy = viewpos / vec2(854.0, 480.0) * 2.0 - 1.0;
-	gl_Position.zw = vec2(0.0, 1.0);
+	gl_Position = vec4(pos, 0.0, 1.0);
+	gl_PointSize = pointsize;
 }
 </script>
-<script type="x-shader/x-fragment" id="fsource">
-precision mediump float;
-uniform vec3 color;
+<script type="x-shader/x-fragment" id="fcolorsource">
+// Fragment shader for drawing colors to the FBO.
+uniform mediump vec3 color;
 void main() {
+	// Discard fragments outside the unit circle.
+	mediump vec2 r = gl_PointCoord * 2.0 - 1.0;
+	if (dot(r, r) > 1.0) discard;
+	// Draw the color for every fragment that remains.
 	gl_FragColor = vec4(color, 1.0);
 }
 </script>
+<script type="x-shader/x-fragment" id="fnormalsource">
+// Fragment shader for drawing normals to the FBO.
+void main() {
+	// Determine a unit vector from the center of the sphere.
+	mediump vec3 r;
+	r.xy = gl_PointCoord * 2.0 - 1.0;
+	r.y = -r.y;
+	r.z = -sqrt(1.0 - dot(r.xy, r.xy));
+	// Map the unit vector from the range [-1, 1] to the range [0, 1]
+	// so that it fits in a color buffer.
+	gl_FragColor = vec4((r + 1.0) / 2.0, 1.0);
+}
+</script>
+<script type="x-shader/x-fragment" id="frendersource">
+// Fragment shader for rendering from the FBOs to the viewport.
+// Texture that holds the color data.
+uniform sampler2D colorsampler;
+// Texture that holds the normal data.
+uniform sampler2D normalsampler;
+// Position of the light source (z < 0 is toward the viewer).
+uniform mediump vec3 lightorigin;
+void main() {
+	// Flip the y-coordinate, since gl_PointCoord is 0 at top and 1 at bottom.
+	mediump vec2 pointcoord = gl_PointCoord;
+	pointcoord.y = 1.0 - pointcoord.y;
+	// Get the color and normal vector from the textures.
+	mediump vec4 color = texture2D(colorsampler, pointcoord);
+	mediump vec3 normal = texture2D(normalsampler, pointcoord).xyz;
+	// Map back from the range [0, 1] to [-1, 1].
+	normal = normal * 2.0 - 1.0;
+	mediump vec3 pos = vec3(pointcoord * 2.0 - 1.0, 0.0);
+	mediump vec3 incident = normalize(pos - lightorigin);
+	mediump float shade = 0.5 + 0.5 * dot(normal, -incident);
+	
+	mediump vec3 reflected = reflect(incident, normal);
+	mediump float specular = 0.3 * smoothstep(0.85, 1.0, dot(reflected, vec3(0.0, 0.0, -1.0)));
+
+	gl_FragColor = color;
+	gl_FragColor.rgb *= shade;
+	gl_FragColor.rgb += specular;
+}
+</script>
 <script>
-var tau = 2 * Math.PI
 var gl = util.getContext(854, 480)
+
+var fbo = gl.createFramebuffer()
+// Output: true
+console.log(gl.isFramebuffer(fbo))
+// Switch from drawing to the default Framebuffer (the viewport) to drawing to the FBO.
+gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
+
+gl.viewport(0, 0, 256, 256)
+
+// Create the texture and initialize it with empty 256x256 data.
+var colortexture = gl.createTexture()
+gl.bindTexture(gl.TEXTURE_2D, colortexture)
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 256, 256, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+// The texture is initialized to transparent black (0,0,0,0).
+// This is important because we actually do need the color texture to be transparent
+// in between the points. We could also ensure it with:
+// gl.clearColor(0, 0, 0, 0) ; gl.clear(gl.CLEAR_COLOR_BIT)
+
+// Attach the color texture to the FBO color attachment point.
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, colortexture, 0)
+
+// The program to draw color to the color texture attached to the FBO.
+var colorprog = util.buildProgram(gl, vsource.text, fcolorsource.text)
+gl.useProgram(colorprog)
+// Draw solid colors to the each of the 16 points.
+for (var i = 0 ; i < 4 ; ++i) {
+	for (var j = 0 ; j < 4 ; ++j) {
+		var x = -0.75 + 0.5 * i, y = -0.75 + 0.5 * j
+		var r = [1, 0.5, 0.25, 0.125][i], b = [1, 0.5, 0.25, 0.125][j]
+		util.drawPoint(gl, {pos: [x, y], pointsize: 50, color: [r, 0, b]})
+	}
+}
+// If the MIN_FILTER sampling setting for the color texture used mipmaps, then it would be
+// important to call gl.generateMipmap(gl.TEXTURE_2D) here, after the texture has been drawn to.
+
+// Now do the same thing to write the normal data to the normal texture.
+var normaltexture = gl.createTexture()
+gl.bindTexture(gl.TEXTURE_2D, normaltexture)
+// The normal texture doesn't need an alpha channel, so use gl.RGB here instead of gl.RGBA.
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 256, 256, 0, gl.RGB, gl.UNSIGNED_BYTE, null)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+
+// Attach the normal texture to the color attachment point in the FBO (thus disconnecting the
+// color texture from the FBO).
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, normaltexture, 0)
+
+var normalprog = util.buildProgram(gl, vsource.text, fnormalsource.text)
+gl.useProgram(normalprog)
+
+for (var i = 0 ; i < 4 ; ++i) {
+	for (var j = 0 ; j < 4 ; ++j) {
+		var x = -0.75 + 0.5 * i, y = -0.75 + 0.5 * j
+		// Comment out the following line to see what the color texture looks like without
+		// any lighting.
+		util.drawPoint(gl, {pos: [x, y], pointsize: 50})
+	}
+}
+
+// Now that the data is on the textures, the FBO can be deleted (not necessary, though).
+gl.deleteFramebuffer(fbo)
+
+
+// Switch back to drawing to the default framebuffer.
+gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+gl.viewport(0, 0, 854, 480)
+
+gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, 0, 1)
+gl.enable(gl.BLEND)
+
+// The program that reads from the color and normal textures to render to the viewport.
+var renderprog = util.buildProgram(gl, vsource.text, frendersource.text)
+gl.useProgram(renderprog)
 util.clear(gl, [0, 0, 0])
+util.setUniform(gl, "pointsize", 256)
+util.setUniform(gl, "colorsampler", 0)
+util.setUniform(gl, "normalsampler", 1)
 
-// Output: 1
-console.log(gl.getParameter(gl.LINE_WIDTH))
+gl.activeTexture(gl.TEXTURE0)
+gl.bindTexture(gl.TEXTURE_2D, colortexture)
+gl.activeTexture(gl.TEXTURE1)
+gl.bindTexture(gl.TEXTURE_2D, normaltexture)
 
-var prog = util.buildProgram(gl, vsource.text, fsource.text)
-gl.useProgram(prog)
-var pos = gl.getAttribLocation(prog, "pos")
-gl.enableVertexAttribArray(pos)
-
-var stardata = []
-for (var i = 0 ; i < 5 ; ++i) {
-	var angle = tau * i * 2 / 5
-	stardata.push(40 * Math.sin(angle), 40 * Math.cos(angle))
+// (mousex, mousey) is the mouse position relative to the center of the canvas.
+var mousex = 0, mousey = 0
+document.onmousemove = function (event) {
+	mousex = event.pageX - gl.canvas.offsetLeft - gl.canvas.width / 2
+	// Invert because y event coordinates start at the top, not the bottom.
+	mousey = -(event.pageY - gl.canvas.offsetTop - gl.canvas.height / 2)
 }
-var starbuffer = gl.createBuffer()
-gl.bindBuffer(gl.ARRAY_BUFFER, starbuffer)
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(stardata), gl.STATIC_DRAW)
-
-// Create the data for the Sierpinski gasket
-function tri(x0, y0, a) {
-	var s = Math.sqrt(3)/2 * a
-	// The three points of the equilateral triangle centered at (x0, y0) with size a
-	var x1 = x0, y1 = y0 - a
-	var x2 = x0 + Math.sqrt(3)/2 * a, y2 = y0 + 0.5 * a
-	var x3 = x0 - Math.sqrt(3)/2 * a, y3 = y0 + 0.5 * a
-	// The three lines connecting the vertices of the triangle.
-	// 12 data points draws 3 line segments with gl.LINES.
-	var data = [
-		x1, y1, x2, y2,
-		x2, y2, x3, y3,
-		x3, y3, x1, y1,
-	]
-	if (a < 5) return data
-	// Include three more copies of the gasket, offset and scaled down by a factor of 2.
-	return data.concat(
-		tri(x0, y0+a, a/2),
-		tri(x0-s, y0-a/2, a/2),
-		tri(x0+s, y0-a/2, a/2)
-	)
-}
-var sierdata = tri(0, 0, 100)
-var sierbuffer = gl.createBuffer()
-gl.bindBuffer(gl.ARRAY_BUFFER, sierbuffer)
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sierdata), gl.STATIC_DRAW)
-
-// Create the data for the Heighway dragon
-// Create a sequence of left (-1) and right (+1) turns
-var turns = [-1]
-for (i = 0 ; i < 11 ; ++i) {
-	var newturns = turns.map(function (x) { return -x })
-	newturns.reverse()
-	turns = turns.concat([1], newturns)
-}
-// d is the current direction (0,1,2,3), and (x, y) is the current position.
-var d = 0, x = 0, y = 0, dragondata = [0, 0]
-turns.forEach(function (turn) {
-	// Turn either left or right, and take a step in the new direction.
-	d = (d + turn + 4) % 4
-	x += [0, 5, 0, -5][d]
-	y += [5, 0, -5, 0][d]
-	// We're using gl.LINE_STRIP, so we only add two data points for each new line segment
-	// after the first starting point. Each new line segment will start where the previous
-	// one ends.
-	dragondata.push(x, y)
-})
-var dragonbuffer = gl.createBuffer()
-gl.bindBuffer(gl.ARRAY_BUFFER, dragonbuffer)
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(dragondata), gl.STATIC_DRAW)
 
 function update() {
 	util.clear(gl, [0, 0, 0])
-	var t = 0.001 * Date.now()
-
-	// draw a Sierpinski gasket using gl.LINES
-	gl.bindBuffer(gl.ARRAY_BUFFER, sierbuffer)
-	gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
-	util.setUniforms(gl, {rotation: 0.2 * t % tau, color: [1, 0, 0], center: [640, 200]})
-	gl.drawArrays(gl.LINES, 0, sierdata.length/2)
-
-	// draw a Heighway dragon curve using gl.LINE_STRIP
-	gl.bindBuffer(gl.ARRAY_BUFFER, dragonbuffer)
-	gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
-	var theta = 0.3 + 0.04 * Math.sin(t)
-	util.setUniforms(gl, {rotation: theta, color: [1, 0.5, 0], center: [150, 320]})
-	var n = Math.ceil(dragondata.length / 2 * (t * 0.04 % 1))
-	gl.drawArrays(gl.LINE_STRIP, 0, n)
-
-	// draw some stars using gl.LINE_LOOP
-	gl.bindBuffer(gl.ARRAY_BUFFER, starbuffer)
-	gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
-	gl.lineWidth(5)
-	util.setUniforms(gl, {rotation: 0.8 * t % tau, color: [1, 1, 0], center: [100, 100]})
-	gl.drawArrays(gl.LINE_LOOP, 0, 5)
-	gl.lineWidth(2)
-	util.setUniforms(gl, {rotation: -0.4 * t % tau, color: [1, 0, 1], center: [180, 120]})
-	gl.drawArrays(gl.LINE_LOOP, 0, 5)
-	gl.lineWidth(1)
-	util.setUniforms(gl, {rotation: 0.4 * t % tau, color: [0, 1, 1], center: [130, 170]})
-	gl.drawArrays(gl.LINE_LOOP, 0, 5)
-
-
+	// Position the light source at the mouse location, 0.4 z units toward the viewer.
+	var lightorigin = [mousex / 128, mousey / 128, -0.4]
+	util.drawPoint(gl, {pos: [0, 0], lightorigin: lightorigin})
 }
 setInterval(update, 1000 / 60)
+
+
 </script>
-
-

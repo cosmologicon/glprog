@@ -1,148 +1,100 @@
 <!DOCTYPE html>
 <body>
-<p>Drawing multiple points in parallel with drawArrays. A 100px white circular point is at the
-center. Rotating around it are 100 red, yellow, and blue points. The red points are all 15px in
-size, while the yellow and blue points have various sizes.
+<p>Cube map textures. A sphere colored by a cube map rotates at the center. Each of the six faces
+of the cube that texture it has a checkerboard pattern. In the background, a larger inverted sphere
+rotates using the same texture, to demonstrate a skybox.
 <script src="util.js"></script>
 <script type="x-shader/x-vertex" id="vsource">
-uniform float rotation;
-attribute vec3 gpos;
-attribute float pointsize;
-
-// Returns a 2x2 rotation matrix corresponding to the given angle.
-mat2 R(in float angle) {
-	float S = sin(angle), C = cos(angle);
-	return mat2(C, S, -S, C);
-}
+// This vertex shader just places the point at the center with the specified size.
+uniform lowp float pointsize;
 void main() {
-	vec3 clippos = gpos;
-	clippos.xz *= R(rotation);  // Rotate around the y (vertical) axis.
-	clippos.x *= 480.0 / 854.0;
-	gl_Position = vec4(clippos, 1.0);
-
+	gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
 	gl_PointSize = pointsize;
 }
 </script>
 <script type="x-shader/x-fragment" id="fsource">
-precision mediump float;
-uniform vec3 color;
+uniform lowp samplerCube sampler;
+uniform mediump float rotation, shade;
+uniform bool invert;
+// 2x2 rotation matrix by the given angle.
+mediump mat2 R(in mediump float angle) {
+	mediump float S = sin(angle), C = cos(angle);
+	return mat2(C, S, -S, C);
+}
 void main() {
-	if (length(gl_PointCoord * 2.0 - 1.0) > 1.0) discard;
-	float shade = 1.0 - gl_FragCoord.z;
-	gl_FragColor = vec4(color * shade, 1.0);
+	// Determine a unit vector from the center of the sphere.
+	mediump vec3 r;
+	r.xy = gl_PointCoord * 2.0 - 1.0;
+	if (length(r.xy) > 1.0) discard;
+	// In the non-inverted case, use the negative z value (front surface).
+	// In the inverted case, use the positive z value (back surface).
+	r.z = -sqrt(1.0 - dot(r.xy, r.xy));
+	if (invert) r.z = -r.z;
+	// Apply a couple rotation matrices that vary with time.
+	r.xz *= R(rotation);
+	mediump float tilt = 0.5 + 0.5 * sin(rotation);
+	r.yz *= R(-tilt);
+	// The textureCube function takes a vector, and gives you the color at the surface of the
+	// cube if you went the direction of that vector from the cube center.
+	gl_FragColor = textureCube(sampler, r);
+	// Darken the color if shade < 1.
+	gl_FragColor.rgb *= shade;
 }
 </script>
 <script>
 var tau = 2 * Math.PI
+// Create the checkerboard image to use as a texture.
+function checkerimg(color0, color1) {
+	var imgcanvas = document.createElement("canvas")
+	imgcanvas.width = 32
+	imgcanvas.height = 32
+	var imgcontext = imgcanvas.getContext("2d")
+	for (var i = 0 ; i < 4 ; ++i) {
+		for (var j = 0 ; j < 4 ; ++j) {
+			imgcontext.fillStyle = (i + j) % 2 ? color1 : color0
+			imgcontext.fillRect(i * 8, j * 8, 8, 8)
+		}
+	}
+	return imgcanvas
+}
+
 var gl = util.getContext(854, 480)
 util.clear(gl, [0, 0, 0])
 
-// A random set of [x, y, z] coordinates within the sphere of radius 1
-function randompos() {
-	var x = Math.random() * 2 - 1
-	var y = Math.random() * 2 - 1
-	var z = Math.random() * 2 - 1
-	if (x * x + y * y + z * z > 1) return randompos()
-	return [x, y, z]
-}
-// Generate a random point size between 5 and 30
-function randomsize() {
-	return Math.pow(Math.random(), 3) * 25 + 5
-}
-
-// Generate a length-300 Array containing the coordinates of 100 red points.
-var reddata = []
-for (var i = 0 ; i < 100 ; ++i) {
-	reddata = reddata.concat(randompos())
-}
-// JavaScript tip: could also do
-// var reddata = [].concat.apply([], Array.apply(null, {length: 100}).map(randompos))
-
-// Load the coordinates into a Float32Array, and load that into a buffer object.
-var redarray = new Float32Array(reddata)
-var redbuffer = gl.createBuffer()
-gl.bindBuffer(gl.ARRAY_BUFFER, redbuffer)
-gl.bufferData(gl.ARRAY_BUFFER, redarray, gl.STATIC_DRAW)
-
-// Optional: the data is no longer needed on the JavaScript side.
-delete reddata, redarray
-
-
-// Generate a length-800 Array containing interleaved data for yellow and blue points.
-// The data is [x, y, z, point size] for each of 200 points.
-var ybdata = []
-for (var i = 0 ; i < 200 ; ++i) {
-	ybdata = ybdata.concat(randompos())
-	ybdata.push(randomsize())
-}
-var ybarray = new Float32Array(ybdata)
-var ybbuffer = gl.createBuffer()
-gl.bindBuffer(gl.ARRAY_BUFFER, ybbuffer)
-gl.bufferData(gl.ARRAY_BUFFER, ybarray, gl.STATIC_DRAW)
-delete ybdata, ybarray
+// Create the cube map texture.
+var texture = gl.createTexture()
+gl.activeTexture(gl.TEXTURE0)
+gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture)
+// Make the three checkerboard images to use as textures for the cube map.
+var ximg = checkerimg("red", "blue")
+var yimg = checkerimg("yellow", "red")
+var zimg = checkerimg("yellow", "blue")
+// Apply each of the images to two opposite sides of the cube.
+gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, ximg)
+gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, ximg)
+gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, yimg)
+gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, yimg)
+gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, zimg)
+gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, zimg)
+// Use NEAREST filter for subsampling and supersampling to get sharp edges.
+// Note: don't need to generate mipmaps since the min filter doesn't use mipmaps.
+gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 
 var prog = util.buildProgram(gl, vsource.text, fsource.text)
 gl.useProgram(prog)
-gl.enable(gl.DEPTH_TEST)
-
-console.log(gl.getProgramParameter(prog, gl.ACTIVE_ATTRIBUTES))
-console.log(gl.getActiveAttrib(prog, 0))
-console.log(gl.getActiveAttrib(prog, 1))
-
-var gpos = gl.getAttribLocation(prog, "gpos")
-var pointsize = gl.getAttribLocation(prog, "pointsize")
+gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture)
+util.setUniform(gl, "sampler", 0)
 
 function update() {
 	util.clear(gl, [0, 0, 0])
-	var theta = 0.8 * 0.001 * Date.now() % tau
+	var theta = 0.5 * 0.001 * Date.now() % tau
 	util.setUniform(gl, "rotation", theta)
-
-	// A single large white point at the center
-	util.setUniforms(gl, {color: [1, 1, 1]})
-	// Disable array access for both attributes.
-	gl.disableVertexAttribArray(gpos)
-	gl.disableVertexAttribArray(pointsize)
-	// Set the generic attribute values (similar to uniforms)
-	gl.vertexAttrib1f(pointsize, 100)
-	gl.vertexAttrib3fv(gpos, [0, 0, 0])
-	// Draw 1 point
-	gl.drawArrays(gl.POINTS, 0, 1)
-
-	// 100 red points with a fixed size
-	util.setUniforms(gl, {color: [1, 0, 0]})
-	// Enable array access for the gpos attribute
-	gl.enableVertexAttribArray(gpos)
-	gl.bindBuffer(gl.ARRAY_BUFFER, redbuffer)
-	// Point the gpos attribute to beginning of the array buffer
-	gl.vertexAttribPointer(gpos, 3, gl.FLOAT, false, 0, 0)
-	// The pointsize attribute still has array access disabled, and uses its generic value.
-	gl.vertexAttrib1f(pointsize, 15)
-	// Draw 100 points
-	gl.drawArrays(gl.POINTS, 0, 100)
-
-	// 100 yellow points with various sizes
-	gl.enableVertexAttribArray(gpos)
-	gl.enableVertexAttribArray(pointsize)
-	util.setUniforms(gl, {color: [1, 1, 0]})
-	gl.bindBuffer(gl.ARRAY_BUFFER, ybbuffer)
-	gl.vertexAttribPointer(gpos, 3, gl.FLOAT, false, 4*4, 0*4)
-	gl.vertexAttribPointer(pointsize, 1, gl.FLOAT, false, 4*4, 3*4)
-	gl.drawArrays(gl.POINTS, 0, 100)
-
-	// 100 blue points using the same buffer
-	util.setUniforms(gl, {color: [0, 0, 1]})
-	gl.drawArrays(gl.POINTS, 100, 100)
-
-	// An alternate way to draw the blue points is this.
-	// Specify the offsets of the 
-//	gl.vertexAttribPointer(gpos, 3, gl.FLOAT, false, 4*4, (400+0)*4)
-//	gl.vertexAttribPointer(pointsize, 1, gl.FLOAT, false, 4*4, (400+3)*4)
-//	gl.drawArrays(gl.POINTS, 0, 100)
-
-
+	// The background sphere: inverted so that it's like you're inside it.
+	util.drawPoint(gl, {pointsize: 2200, shade: 0.1, invert: true})
+	// The foreground sphere.
+	util.drawPoint(gl, {pointsize: 300, shade: 1, invert: false})
 }
 setInterval(update, 1000 / 60)
 
-
 </script>
-

@@ -1,27 +1,29 @@
 # glprog lessons
 
-These are lessons for learning the fundamentals of WebGL for people who know JavaScript and not
-OpenGL. If this is not what you're looking for, there may be something better for you.
+These are lessons for learning the fundamentals of WebGL for people who know JavaScript and don't
+know OpenGL. If this is not what you're looking for, there may be something better for you.
 
-* These lessons assume you don't know OpenGL. If you already know OpenGL, you should learn WebGL
-from....
-* These lessons assume you don't plan to ever learn other kinds of OpenGL besides WebGL. If you plan
-to use other OpenGL implementations some day, it might be easier to learn OpenGL first, which you
-can do using....
+* These lessons assume you don't know OpenGL. If you already know OpenGL, you can probably learn
+WebGL faster from a general WebGL tutorial.
+* Similarly, if you plan to learn other kinds of OpenGL besides WebGL some day, it might be easier
+to learn OpenGL first. There are many resources for learning OpenGL. Try to find a modern one, as
+older ones (such as NeHe) used very different techniques.
 * These lessons assume you want to get down to the fundamentals. If you're okay with using a
-high-level library to abstract away the details of WebGL, there are a couple good options you should
-use instead: ...
+high-level library to abstract away the details of WebGL, there are good options you should use
+instead, such as [Three.js](http://threejs.org/).
 * If you're from the future, there's probably something better. These lessons cover WebGL 1.0, which
 is widely supported as of May 2015, and which nothing has replaced. If you're from 2017 or later, I
 expect WebGL 2.0 or something else to be widely supported, so you should go learn that.
-* You need to know JavaScript for these lessons. If you want to learn JavaScript first, please
-see....
+* You need to know JavaScript for these lessons. If you're not that familiar with JavaScript, go
+learn that first. I recommend [MDN](https://developer.mozilla.org/en-US/Learn/JavaScript) and I've
+heard good things about [CodeAcademy](https://www.codecademy.com/tracks/javascript).
 * You need some familiarity with the basics of 2D drawing with the HTML5 canvas element. If you
-don't have any experience with that, please see...
+don't have any experience with that, I recommend [diveintohtml5's canvas
+chapter](http://diveintohtml5.info/canvas.html).
 * You need what in the USA would be a high school level understanding of Algebra 2 and Trigonometry.
-If you don't know how matrix multiplication works, or you don't know the parametric equation for the
-unit circle, low level 3D graphics are going to be difficult. I recommend taking a course. I've
-heard good things about Khan Academy.
+This is essential for low-level 3D graphics. If you don't know how matrix multiplication works, or
+you don't know the parametric equation for the unit circle, I recommend getting a textbook or taking
+an online course. I've heard good things about Khan Academy.
 
 Background
 ==========
@@ -39,6 +41,55 @@ WebGL assume you already know the basics of OpenGL.
 
 So these lessons are supposed to fill the gap, for people who don't know the basics, but want to
 learn them for WebGL.
+
+How to use the lessons
+======================
+
+The "lessons" are commented, working example code, with accompanying READMEs. The examples may only
+work in Chrome, but not because of the WebGL parts. Those should all be portable. The first lesson
+is `01.html` and the corresponding README is `01.md`.
+
+You should download the lessons from the repository so that you have a local copy that you can edit.
+To start a lesson, open the html file in your browser and see that what's displayed matches the text
+at the top. Open the html file in your text editor of choice, so that you can make changes to it and
+refresh the browser to see them in action. Also open the README for that lesson. I recommend going
+back and forth between the README and the html file, seeing where the concepts from the README are
+used in the html file. You should aim to understand all the lines in the html.
+
+You should also open the developer console in your browser, so you can see any errors, and see
+anything that's output to the console. `console.log` lines are used throughout the lesson, to
+demonstrate the simple getter functions. Make sure the console matches what the lesson says it
+should say.
+
+Finally, there are some exercises at the end of the README. Doing these is probably the best thing
+you can do to make sure you understand the material. To do the exercises, edit the html file in your
+text editor, and reload the page in your browser to check that you did the exercise right.
+
+I'm not relying on any helper libraries, although these are very common with WebGL. I'm writing out
+everything at least once. If something is going to come up a lot, I'll put a method in `util.js`,
+but only after I've shown it in the lesson. `01a.html` is the same as `01.html` with some of the
+code moved into `util.js`, and most of the detailed comments removed.
+
+Lesson listing
+--------------
+
+1. Creating the WebGL context, `clear`, `viewport`, `scissor`
+2. Shaders, WebGL programs
+3. Shader uniforms, drawing single points
+4. Depth testing, blending
+5. Shader functions, matrices, other GLSL stuff
+6. Texture objects, mipmaps, texture wrapping options
+7. Texture cube maps
+8. Framebuffer objects
+9. Shader attributes, drawing multiple points
+10. Drawing lines
+
+To be covered in future lessons
+-------------------------------
+
+* Shader varyings
+* Drawing triangles
+* Element array buffers
 
 Helpful concepts
 ================
@@ -123,35 +174,8 @@ Shaders are written in GLSL ES (the OpenGL ES Shading Language), not JavaScript.
 cool language. It's really limited and it takes some getting used to, but it has a nifty syntax
 for doing what it does.
 
-The Lessons
-===========
 
-These "lessons" are commented, working example code, with accompanying READMEs. The examples may
-only work in Chrome, but not because of the WebGL parts. Those should all be portable. The first
-lesson is `01.html` and the corresponding README is `01.md`.
+References
+----------
 
-I'm not relying on any helper libraries, although these are very common with WebGL. I'm writing out
-everything at least once. If something is going to come up a lot, I'll put a method in `util.js`,
-but only after I've shown it in the lesson. `01a.html` is the same as `01.html` with some of the
-code moved into `util.js`, and most of the detailed comments removed.
-
-Lesson listing
---------------
-
-1. Creating the WebGL context, `clear`, `viewport`, `scissor`
-2. Shaders, WebGL programs
-3. Shader uniforms, drawing single points
-4. Depth testing, blending
-5. Shader functions, matrices, other GLSL stuff
-6. Texture objects, mipmaps, texture wrapping options
-7. Texture cube maps
-8. Framebuffer objects
-9. Shader attributes, drawing multiple points
-10. Drawing lines
-
-To be covered in future lessons
--------------------------------
-
-* Shader varyings
-* Drawing triangles
-* Element array buffers
+https://www.khronos.org/files/opengles_shading_language.pdf

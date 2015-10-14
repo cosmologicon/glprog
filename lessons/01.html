@@ -5,6 +5,8 @@
 <script>
 
 // SET UP THE CANVAS AND THE GL CONTEXT
+// In lesson 01a, this section is replaced with the convenience function:
+// util.getContext(854, 480)
 
 // Create the canvas and resize it to 854x480
 var canvas = document.createElement("canvas")
@@ -18,7 +20,7 @@ if (!gl) throw "webgl context could not be initialized"
 
 // This is the size of the drawing buffer, 854, 480 in this case.
 // Should be equivalent to gl.canvas.width and gl.canvas.height.
-console.log(gl.drawingBufferWidth, gl.drawingBufferHeight)
+console.log("Drawing buffer size: %d x %d", gl.drawingBufferWidth, gl.drawingBufferHeight)
 
 // It's important to call gl.viewport if you ever resize the canvas.
 // Any of the following would be fine.
@@ -27,7 +29,7 @@ gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
 
 // Output: [0, 0, 854, 480]
-console.log(gl.getParameter(gl.VIEWPORT))
+console.log("Viewport size:", gl.getParameter(gl.VIEWPORT))
 
 
 // COLOR THE ENTIRE CANVAS BLUE
@@ -36,8 +38,8 @@ console.log(gl.getParameter(gl.VIEWPORT))
 // The last number (1) is the alpha value. 1 = completely opaque.
 gl.clearColor(0, 0, 0.5, 1)
 
-// Output: [0, 0, 1, 1]
-console.log(gl.getParameter(gl.COLOR_CLEAR_VALUE))
+// Output: [0, 0, 0.5, 1]
+console.log("Clear color:", gl.getParameter(gl.COLOR_CLEAR_VALUE))
 
 // Clear the canvas (set every pixel to the clear color)
 gl.clear(gl.COLOR_BUFFER_BIT)
@@ -46,20 +48,20 @@ gl.clear(gl.COLOR_BUFFER_BIT)
 // COLOR A BOX RED
 
 // Output: false
-console.log(gl.getParameter(gl.SCISSOR_TEST))
+console.log("Scissor test enabled:", gl.getParameter(gl.SCISSOR_TEST))
 
 // Output: [0, 0, 854, 480]
-console.log(gl.getParameter(gl.SCISSOR_BOX))
+console.log("Scissor box:", gl.getParameter(gl.SCISSOR_BOX))
 
 gl.enable(gl.SCISSOR_TEST)
 // Output: true
-console.log(gl.getParameter(gl.SCISSOR_TEST))
+console.log("Scissor test enabled:", gl.getParameter(gl.SCISSOR_TEST))
 
 // Restrict the draw region to a 200x200 box with lower-left corner at (160, 10),
 // near the bottom.
 gl.scissor(160, 10, 200, 200)
 // Output: [160, 10, 200, 200]
-console.log(gl.getParameter(gl.SCISSOR_BOX))
+console.log("Scissor box:", gl.getParameter(gl.SCISSOR_BOX))
 
 // Clear the scissor area to red.
 gl.clearColor(0.5, 0, 0, 1)

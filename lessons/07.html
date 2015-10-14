@@ -1,100 +1,134 @@
 <!DOCTYPE html>
 <body>
-<p>Cube map textures. A sphere colored by a cube map rotates at the center. Each of the six faces
-of the cube that texture it has a checkerboard pattern. In the background, a larger inverted sphere
-rotates using the same texture, to demonstrate a skybox.
+<p>A 5x5x5 rotating cube of points with various colors and positions. The points are circular with
+lightining from the top left. When the mouse is moved over the viewport, a circular region near the
+cursor has a negative color filter applied.
 <script src="util.js"></script>
 <script type="x-shader/x-vertex" id="vsource">
-// This vertex shader just places the point at the center with the specified size.
-uniform lowp float pointsize;
+// Rotation angle about the vertical axis in radians
+uniform float rotation;
+
+// Indices specifying the point's position within the cube.
+// Runs from (0, 0, 0) in one corner of the cube to (4, 4, 4) in the opposite corner.
+uniform mediump ivec3 index;
+
+// Returns a 2x2 rotation matrix corresponding to the given angle.
+mat2 R(in float theta) {
+	float S = sin(theta), C = cos(theta);
+	return mat2(C, S, -S, C);
+}
+
+// The amount to tilt toward the viwer, and the corresponding rotation matrix.
+const float tilt = 0.4;
+mat2 tiltmatrix = R(tilt);
+
+// Viewport size in pixels.
+const vec3 viewportsize = vec3(854.0, 480.0, 854.0);
+
+uniform mediump vec2 mpos;
+// Base size of points.
+const float pointsize = 50.0;
 void main() {
-	gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
-	gl_PointSize = pointsize;
+	// Transform index into a point in 3-d space between (-1, -1, -1) and (1, 1, 1)
+	vec3 gamepos = (vec3(index) - 2.0) / 2.0;
+	// Rotate around the y (vertical) axis.
+	gamepos.xz *= R(rotation);
+	// Rotate around the x (horizontal) axis toward the viewer.
+	gamepos.yz *= tiltmatrix;
+	// Transform into view coordinates (pixels going from (0, 0, 0) to (854, 480, 480)).
+	float gamescale = viewportsize.y / 4.2;  // Pixels per game unit.
+	vec3 viewpos = viewportsize * 0.5 + gamepos * gamescale;
+
+	// Scale from view coordinates to clip coordinates.
+	// Points appear if each of their clip coordinates are in the range [-1, 1].
+	vec3 clippos = viewpos / viewportsize * 2.0 - 1.0;
+	gl_Position = vec4(clippos, 1.0);
+
+	// Apply a perspective transformation, i.e. make points farther away look smaller.
+	float pfactor = 1.0 + 0.7 * clippos.z;
+	gl_PointSize = pointsize / pfactor;
+
+	// Make it so that the distances between points are smaller when farther from the viewer,
+	// matching perspective.
+	gl_Position.xyz /= pfactor;
+	// Note: the following is an alternative to the above line. It accomplishes the same thing.
+	// (This is one thing homogeneous coordinates are good at.)
+	//gl_Position.w *= pfactor;
 }
 </script>
 <script type="x-shader/x-fragment" id="fsource">
-uniform lowp samplerCube sampler;
-uniform mediump float rotation, shade;
-uniform bool invert;
-// 2x2 rotation matrix by the given angle.
-mediump mat2 R(in mediump float angle) {
-	mediump float S = sin(angle), C = cos(angle);
-	return mat2(C, S, -S, C);
-}
+precision mediump float;
+
+// Indices running 0 through 4 specifying the point's position within the cube.
+uniform ivec3 index;
+
+// Mouse position in pixels.
+uniform vec2 mpos;
+
 void main() {
-	// Determine a unit vector from the center of the sphere.
-	mediump vec3 r;
-	r.xy = gl_PointCoord * 2.0 - 1.0;
-	if (length(r.xy) > 1.0) discard;
-	// In the non-inverted case, use the negative z value (front surface).
-	// In the inverted case, use the positive z value (back surface).
-	r.z = -sqrt(1.0 - dot(r.xy, r.xy));
-	if (invert) r.z = -r.z;
-	// Apply a couple rotation matrices that vary with time.
-	r.xz *= R(rotation);
-	mediump float tilt = 0.5 + 0.5 * sin(rotation);
-	r.yz *= R(-tilt);
-	// The textureCube function takes a vector, and gives you the color at the surface of the
-	// cube if you went the direction of that vector from the cube center.
-	gl_FragColor = textureCube(sampler, r);
-	// Darken the color if shade < 1.
-	gl_FragColor.rgb *= shade;
+	// Base color of this point.
+	vec3 color = (vec3(index) + 1.0) / 6.0;
+
+	// p is a vector that ranges from (-1, -1) in the lower left to (1, 1) in the upper right.
+	vec2 p;
+	p.x = gl_PointCoord.x * 2.0 - 1.0;
+	p.y = 1.0 - gl_PointCoord.y * 2.0;
+	if (length(p) > 1.0) discard;  // Fragment is outside the unit circle.
+
+	// Lighting. shade is a factor related to the alignment of this fragment with the +y axis.
+	float shade = 0.5 + 0.6 * p.y;
+	shade = clamp(shade, 0.0, 1.0);  // Restrict shade to the range [0, 1].
+	color *= shade;
+
+	// Make points that are farther from the viewer darker.
+	// gl_FragCoord.z ranges from 0 (closest) to 1 (farthest).
+	color *= 1.0 - gl_FragCoord.z;
+
+	// Apply a negative color filter for points within 100 pixels of the mouse position.
+	if (distance(gl_FragCoord.xy, mpos) < 100.0) {
+		color = 1.0 - color;
+	}
+
+	gl_FragColor = vec4(color, 1.0);
 }
 </script>
 <script>
 var tau = 2 * Math.PI
-// Create the checkerboard image to use as a texture.
-function checkerimg(color0, color1) {
-	var imgcanvas = document.createElement("canvas")
-	imgcanvas.width = 32
-	imgcanvas.height = 32
-	var imgcontext = imgcanvas.getContext("2d")
-	for (var i = 0 ; i < 4 ; ++i) {
-		for (var j = 0 ; j < 4 ; ++j) {
-			imgcontext.fillStyle = (i + j) % 2 ? color1 : color0
-			imgcontext.fillRect(i * 8, j * 8, 8, 8)
-		}
-	}
-	return imgcanvas
+
+// Update the mouse position whenever the mouse moves.
+// (mousex, mousey) is the mouse position in pixels as measured from the lower left of the canvas.
+var mousex = 0, mousey = 0
+document.onmousemove = function (event) {
+	mousex = event.pageX - gl.canvas.offsetLeft
+	// Invert because y event coordinates start at the top, not the bottom.
+	mousey = gl.canvas.height - (event.pageY - gl.canvas.offsetTop)
 }
 
 var gl = util.getContext(854, 480)
-util.clear(gl, [0, 0, 0])
-
-// Create the cube map texture.
-var texture = gl.createTexture()
-gl.activeTexture(gl.TEXTURE0)
-gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture)
-// Make the three checkerboard images to use as textures for the cube map.
-var ximg = checkerimg("red", "blue")
-var yimg = checkerimg("yellow", "red")
-var zimg = checkerimg("yellow", "blue")
-// Apply each of the images to two opposite sides of the cube.
-gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, ximg)
-gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, ximg)
-gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, yimg)
-gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, yimg)
-gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, zimg)
-gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, zimg)
-// Use NEAREST filter for subsampling and supersampling to get sharp edges.
-// Note: don't need to generate mipmaps since the min filter doesn't use mipmaps.
-gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-
+gl.enable(gl.DEPTH_TEST)  // We need depth testing but we don't need blending.
 var prog = util.buildProgram(gl, vsource.text, fsource.text)
 gl.useProgram(prog)
-gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture)
-util.setUniform(gl, "sampler", 0)
 
 function update() {
 	util.clear(gl, [0, 0, 0])
-	var theta = 0.5 * 0.001 * Date.now() % tau
-	util.setUniform(gl, "rotation", theta)
-	// The background sphere: inverted so that it's like you're inside it.
-	util.drawPoint(gl, {pointsize: 2200, shade: 0.1, invert: true})
-	// The foreground sphere.
-	util.drawPoint(gl, {pointsize: 300, shade: 1, invert: false})
+	// theta is an angle that increases by 0.3 radians per second.
+	// Modding it by tau ensures that it remains fairly small in magnitude, while still being
+	// continuous for the purpose of trigonometric functions. (Unlike JavaScript, shaders don't
+	// necessarily have enough precision to represent numbers as big as Date.now() while maintaining
+	// the precision we want here.)
+	var theta = 0.3 * 0.001 * Date.now() % tau
+	util.setUniforms(gl, {"rotation": theta, "mpos": [mousex, mousey]})
+	// Iterate over each of the 5x5x5 points in the grid and update the index uniform.
+	for (var i = 0 ; i < 5 ; ++i) {
+		for (var j = 0 ; j < 5 ; ++j) {
+			for (var k = 0 ; k < 5 ; ++k) {
+				util.setUniforms(gl, {index: [i, j, k]})
+				util.drawPoint(gl)
+			}
+		}
+	}
 }
 setInterval(update, 1000 / 60)
 
 </script>
+

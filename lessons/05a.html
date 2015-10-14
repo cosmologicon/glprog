@@ -1,79 +1,65 @@
 <!DOCTYPE html>
 <body>
-<p>A 5x5x5 rotating cube of points with various colors and positions. The points are circular with
-lightining from the top left.
+<p>A 5x5x5 rotating cube of points with various colors and positions.
 <script src="util.js"></script>
 <script type="x-shader/x-vertex" id="vsource">
-// Rotation angle about the vertical axis in radians
 uniform float rotation;
-
-// Indices specifying the point's position within the cube.
-// Runs from (0, 0, 0) in one corner of the cube to (4, 4, 4) in the opposite corner.
+// Indices running 0 through 4 for x, y, and z coordinates.
 uniform mediump ivec3 index;
 
 // Returns a 2x2 rotation matrix corresponding to the given angle.
-mat2 R(in float theta) {
-	float S = sin(theta), C = cos(theta);
+mat2 R(in float angle) {
+	float S = sin(angle), C = cos(angle);
 	return mat2(C, S, -S, C);
 }
 
-// The amount to tilt toward the viwer, and the corresponding rotation matrix.
-const float tilt = 0.4;
-mat2 tiltmatrix = R(tilt);
-
-// Viewport size in pixels.
-const vec3 viewportsize = vec3(854.0, 480.0, 854.0);
-
-// Base size of points.
-const float pointsize = 50.0;
+const vec3 viewportsize = vec3(854.0, 480.0, 800.0);
+const float pointsize = 40.0;
 void main() {
 	// Transform index into a point in 3-d space between (-1, -1, -1) and (1, 1, 1)
 	vec3 gamepos = (vec3(index) - 2.0) / 2.0;
-	// Rotate around the y (vertical) axis.
-	gamepos.xz *= R(rotation);
-	// Rotate around the x (horizontal) axis toward the viewer.
-	gamepos.yz *= tiltmatrix;
-	// Transform into view coordinates (pixels going from (0, 0, 0) to (854, 480, 480)).
-	float gamescale = viewportsize.y / 4.2;  // Pixels per game unit.
+	gamepos.xz *= R(rotation);  // Rotate around the y (vertical) axis.
+	gamepos.yz *= R(0.4);
+	float gamescale = 0.24 * viewportsize.y;
 	vec3 viewpos = viewportsize * 0.5 + gamepos * gamescale;
 
 	// Scale from view coordinates to clip coordinates.
 	// Points appear if each of their clip coordinates are in the range [-1, 1].
 	vec3 clippos = viewpos / viewportsize * 2.0 - 1.0;
 	gl_Position = vec4(clippos, 1.0);
-
 	gl_PointSize = pointsize;
 }
 </script>
 <script type="x-shader/x-fragment" id="fsource">
+// Fragment shader: apply the given color, circular shape, and lighting.
 precision mediump float;
 
-// Indices running 0 through 4 specifying the point's position within the cube.
+// Indices running 0 through 4 for r, g, and b color components.
 uniform ivec3 index;
 
 void main() {
 	// Base color of this point.
 	vec3 color = (vec3(index) + 1.0) / 6.0;
-
-	// p is a vector that ranges from (-1, -1) in the lower left to (1, 1) in the upper right.
-	vec2 p;
-	p.x = gl_PointCoord.x * 2.0 - 1.0;
-	p.y = 1.0 - gl_PointCoord.y * 2.0;
-	if (length(p) > 1.0) discard;  // Fragment is outside the unit circle.
-
-	// Lighting. shade is a factor related to the alignment of this fragment with the +y axis.
-	float shade = 0.5 + 0.6 * p.y;
-	shade = clamp(shade, 0.0, 1.0);  // Restrict shade to the range [0, 1].
-	color *= shade;
-
 	gl_FragColor = vec4(color, 1.0);
 }
 </script>
 <script>
 var tau = 2 * Math.PI
 
+// (mousex, mousey) is the mouse position in pixels as measured from the lower left.
+var mousex = 0, mousey = 0
+document.onmousemove = function (event) {
+	mousex = event.pageX - gl.canvas.offsetLeft
+	// Invert because y event coordinates start at the top, not the bottom.
+	mousey = gl.canvas.height - (event.pageY - gl.canvas.offsetTop)
+}
+
+
 var gl = util.getContext(854, 480)
-gl.enable(gl.DEPTH_TEST)  // We need depth testing but we don't need blending.
+util.clear(gl, [0, 0, 0])
+gl.disable(gl.BLEND)
+gl.enable(gl.DEPTH_TEST)
+
 var prog = util.buildProgram(gl, vsource.text, fsource.text)
 gl.useProgram(prog)
 
@@ -85,8 +71,7 @@ function update() {
 	// necessarily have enough precision to represent numbers as big as Date.now() while maintaining
 	// the precision we want here.)
 	var theta = 0.3 * 0.001 * Date.now() % tau
-	util.setUniforms(gl, {"rotation": theta})
-	// Iterate over each of the 5x5x5 points in the grid and update the index uniform.
+	util.setUniform(gl, "rotation", theta)
 	for (var i = 0 ; i < 5 ; ++i) {
 		for (var j = 0 ; j < 5 ; ++j) {
 			for (var k = 0 ; k < 5 ; ++k) {

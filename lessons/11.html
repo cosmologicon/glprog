@@ -1,97 +1,148 @@
 <!DOCTYPE html>
 <body>
-<p>Drawing Triangles. A pattern is drawn using the three methods of drawing triangles to the
-viewport. Moving the mouse over the canvas also draws through the same vertices using gl.LINE_STRIP.
+<p>Drawing multiple points in parallel with drawArrays. A 100px white circular point is at the
+center. Rotating around it are 100 red, yellow, and blue points. The red points are all 15px in
+size, while the yellow and blue points have various sizes.
 <script src="util.js"></script>
 <script type="x-shader/x-vertex" id="vsource">
-attribute vec2 pos;
+uniform float rotation;
+attribute vec3 gpos;
+attribute float pointsize;
+
+// Returns a 2x2 rotation matrix corresponding to the given angle.
+mat2 R(in float angle) {
+	float S = sin(angle), C = cos(angle);
+	return mat2(C, S, -S, C);
+}
 void main() {
-	gl_Position = vec4(pos / vec2(854.0, 480.0) * 2.0, 0.0, 1.0);
+	vec3 clippos = gpos;
+	clippos.xz *= R(rotation);  // Rotate around the y (vertical) axis.
+	clippos.x *= 480.0 / 854.0;
+	gl_Position = vec4(clippos, 1.0);
+
+	gl_PointSize = pointsize;
 }
 </script>
 <script type="x-shader/x-fragment" id="fsource">
 precision mediump float;
 uniform vec3 color;
 void main() {
-	gl_FragColor = vec4(color, 1.0);
+	if (length(gl_PointCoord * 2.0 - 1.0) > 1.0) discard;
+	float shade = 1.0 - gl_FragCoord.z;
+	gl_FragColor = vec4(color * shade, 1.0);
 }
 </script>
 <script>
 var tau = 2 * Math.PI
 var gl = util.getContext(854, 480)
 util.clear(gl, [0, 0, 0])
-gl.lineWidth(2)
+
+// A random set of [x, y, z] coordinates within the sphere of radius 1
+function randompos() {
+	var x = Math.random() * 2 - 1
+	var y = Math.random() * 2 - 1
+	var z = Math.random() * 2 - 1
+	if (x * x + y * y + z * z > 1) return randompos()
+	return [x, y, z]
+}
+// Generate a random point size between 5 and 30
+function randomsize() {
+	return Math.pow(Math.random(), 3) * 25 + 5
+}
+
+// Generate a length-300 Array containing the coordinates of 100 red points.
+var reddata = []
+for (var i = 0 ; i < 100 ; ++i) {
+	reddata = reddata.concat(randompos())
+}
+// JavaScript tip: could also do
+// var reddata = [].concat.apply([], Array.apply(null, {length: 100}).map(randompos))
+
+// Load the coordinates into a Float32Array, and load that into a buffer object.
+var redarray = new Float32Array(reddata)
+var redbuffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, redbuffer)
+gl.bufferData(gl.ARRAY_BUFFER, redarray, gl.STATIC_DRAW)
+
+// Optional: the data is no longer needed on the JavaScript side.
+delete reddata, redarray
+
+
+// Generate a length-800 Array containing interleaved data for yellow and blue points.
+// The data is [x, y, z, point size] for each of 200 points.
+var ybdata = []
+for (var i = 0 ; i < 200 ; ++i) {
+	ybdata = ybdata.concat(randompos())
+	ybdata.push(randomsize())
+}
+var ybarray = new Float32Array(ybdata)
+var ybbuffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, ybbuffer)
+gl.bufferData(gl.ARRAY_BUFFER, ybarray, gl.STATIC_DRAW)
+delete ybdata, ybarray
 
 var prog = util.buildProgram(gl, vsource.text, fsource.text)
 gl.useProgram(prog)
-var pos = gl.getAttribLocation(prog, "pos")
-gl.enableVertexAttribArray(pos)
+gl.enable(gl.DEPTH_TEST)
 
-var circledata = []
-for (var i = 0 ; i < 60 ; ++i) {
-	var angle = tau * i / 60
-	circledata.push(120 * Math.cos(angle), 120 * Math.sin(angle))
-}
-var circlebuffer = gl.createBuffer()
-gl.bindBuffer(gl.ARRAY_BUFFER, circlebuffer)
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(circledata), gl.STATIC_DRAW)
+console.log(gl.getProgramParameter(prog, gl.ACTIVE_ATTRIBUTES))
+console.log(gl.getActiveAttrib(prog, 0))
+console.log(gl.getActiveAttrib(prog, 1))
 
-var raydata = []
-for (var i = 0 ; i < 8 ; ++i) {
-	var angle = tau * i / 8
-	// Left corner
-	raydata.push(140 * Math.cos(angle + 0.3), 140 * Math.sin(angle + 0.3))
-	// right corner
-	raydata.push(140 * Math.cos(angle - 0.3), 140 * Math.sin(angle - 0.3))
-	// Outer corner
-	raydata.push(220 * Math.cos(angle), 220 * Math.sin(angle))
-}
-var raybuffer = gl.createBuffer()
-gl.bindBuffer(gl.ARRAY_BUFFER, raybuffer)
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(raydata), gl.STATIC_DRAW)
+var gpos = gl.getAttribLocation(prog, "gpos")
+var pointsize = gl.getAttribLocation(prog, "pointsize")
 
-var shadedata = [-80, 0, -20, 0, -100, 60, -10, 40, 100, 60, 10, 40, 80, 0, 20, 0]
-var shadebuffer = gl.createBuffer()
-gl.bindBuffer(gl.ARRAY_BUFFER, shadebuffer)
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(shadedata), gl.STATIC_DRAW)
-
-var drawlines = false
-gl.canvas.onmousemove = function () { drawlines = true }
-gl.canvas.onmouseout = function () { drawlines = false }
 function update() {
-	util.clear(gl, [0.8, 0.8, 1])
+	util.clear(gl, [0, 0, 0])
+	var theta = 0.8 * 0.001 * Date.now() % tau
+	util.setUniform(gl, "rotation", theta)
 
-	// draw the rays using gl.TRIANGLES
-	gl.bindBuffer(gl.ARRAY_BUFFER, raybuffer)
-	gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
-	util.setUniforms(gl, {color: [1, 0.9, 0]})
-	gl.drawArrays(gl.TRIANGLES, 0, raydata.length/2)
-	if (drawlines) {
-		util.setUniforms(gl, {color: [0, 0, 0]})
-		gl.drawArrays(gl.LINE_STRIP, 0, raydata.length/2)
-	}
+	// A single large white point at the center
+	util.setUniforms(gl, {color: [1, 1, 1]})
+	// Disable array access for both attributes.
+	gl.disableVertexAttribArray(gpos)
+	gl.disableVertexAttribArray(pointsize)
+	// Set the generic attribute values (similar to uniforms)
+	gl.vertexAttrib1f(pointsize, 100)
+	gl.vertexAttrib3fv(gpos, [0, 0, 0])
+	// Draw 1 point
+	gl.drawArrays(gl.POINTS, 0, 1)
 
-	// draw the circle using gl.TRIANGLE_FAN
-	gl.bindBuffer(gl.ARRAY_BUFFER, circlebuffer)
-	gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
+	// 100 red points with a fixed size
+	util.setUniforms(gl, {color: [1, 0, 0]})
+	// Enable array access for the gpos attribute
+	gl.enableVertexAttribArray(gpos)
+	gl.bindBuffer(gl.ARRAY_BUFFER, redbuffer)
+	// Point the gpos attribute to beginning of the array buffer
+	gl.vertexAttribPointer(gpos, 3, gl.FLOAT, false, 0, 0)
+	// The pointsize attribute still has array access disabled, and uses its generic value.
+	gl.vertexAttrib1f(pointsize, 15)
+	// Draw 100 points
+	gl.drawArrays(gl.POINTS, 0, 100)
+
+	// 100 yellow points with various sizes
+	gl.enableVertexAttribArray(gpos)
+	gl.enableVertexAttribArray(pointsize)
 	util.setUniforms(gl, {color: [1, 1, 0]})
-	gl.drawArrays(gl.TRIANGLE_FAN, 0, circledata.length/2)
-	if (drawlines) {
-		util.setUniforms(gl, {color: [0, 0, 0]})
-		gl.drawArrays(gl.LINE_STRIP, 0, circledata.length/2)
-	}
+	gl.bindBuffer(gl.ARRAY_BUFFER, ybbuffer)
+	gl.vertexAttribPointer(gpos, 3, gl.FLOAT, false, 4*4, 0*4)
+	gl.vertexAttribPointer(pointsize, 1, gl.FLOAT, false, 4*4, 3*4)
+	gl.drawArrays(gl.POINTS, 0, 100)
 
-	// draw the shades using gl.TRIANGLE_STRIP
-	gl.bindBuffer(gl.ARRAY_BUFFER, shadebuffer)
-	gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
-	util.setUniforms(gl, {color: [0, 0, 0]})
-	gl.drawArrays(gl.TRIANGLE_STRIP, 0, shadedata.length/2)
-	if (drawlines) {
-		util.setUniforms(gl, {color: [1, 0, 0.5]})
-		gl.drawArrays(gl.LINE_STRIP, 0, shadedata.length/2)
-	}
+	// 100 blue points using the same buffer
+	util.setUniforms(gl, {color: [0, 0, 1]})
+	gl.drawArrays(gl.POINTS, 100, 100)
+
+	// An alternate way to draw the blue points is this.
+	// Specify the offsets of the 
+//	gl.vertexAttribPointer(gpos, 3, gl.FLOAT, false, 4*4, (400+0)*4)
+//	gl.vertexAttribPointer(pointsize, 1, gl.FLOAT, false, 4*4, (400+3)*4)
+//	gl.drawArrays(gl.POINTS, 0, 100)
+
+
 }
 setInterval(update, 1000 / 60)
-</script>
 
+
+</script>
 

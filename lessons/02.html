@@ -8,26 +8,26 @@ var gl = util.getContext(854, 480)
 var prog = gl.createProgram()
 
 // Output: true
-console.log(gl.isProgram(prog))
+console.log("Is this a program object:", gl.isProgram(prog))
 // Output: ""
-console.log(gl.getProgramInfoLog(prog))
+console.log("Program info log:", gl.getProgramInfoLog(prog))
 
 // Create a vertex shader object
 var vshader = gl.createShader(gl.VERTEX_SHADER)
 // Output: true
-console.log(gl.isShader(vshader))
+console.log("Is this a shader object:", gl.isShader(vshader))
 // Output: a Number equal to gl.VERTEX_SHADER
-console.log(gl.getShaderParameter(vshader, gl.SHADER_TYPE))
+console.log("Shader type (should equal %d): %d", gl.VERTEX_SHADER, gl.getShaderParameter(vshader, gl.SHADER_TYPE))
 // Set the source code for the shader
 gl.shaderSource(vshader, "void main() { gl_Position = vec4(0.0); }")
 // Output: the source code for this shader
-console.log(gl.getShaderSource(vshader))
+console.log("Vertex shader source code:", gl.getShaderSource(vshader))
 // Compile the shader
 gl.compileShader(vshader)
 // Output: true
-console.log(gl.getShaderParameter(vshader, gl.COMPILE_STATUS))
+console.log("Vertex shader compile status:", gl.getShaderParameter(vshader, gl.COMPILE_STATUS))
 // Output: ""
-console.log(gl.getShaderInfoLog(vshader))
+console.log("Vertex shader info log:", gl.getShaderInfoLog(vshader))
 // Attach the shader to the program
 gl.attachShader(prog, vshader)
 // Explicitly delete the shader. Usually unnecessary.
@@ -40,26 +40,26 @@ gl.compileShader(fshader)
 gl.attachShader(prog, fshader)
 
 // Output: 2
-console.log(gl.getProgramParameter(prog, gl.ATTACHED_SHADERS))
+console.log("Number of attached shaders:", gl.getProgramParameter(prog, gl.ATTACHED_SHADERS))
 // Output: an Array of the two attached shaders
-console.log(gl.getAttachedShaders(prog))
+console.log("The attached shaders:", gl.getAttachedShaders(prog))
 
 // Once a vertex and fragment shader are both attached, link the program.
 gl.linkProgram(prog)
 // Output: true
-console.log(gl.getProgramParameter(prog, gl.LINK_STATUS))
+console.log("Program link status:", gl.getProgramParameter(prog, gl.LINK_STATUS))
 
 // Optional: validate the program.
 gl.validateProgram(prog)
 // Output: true
-console.log(gl.getProgramParameter(prog, gl.VALIDATE_STATUS))
+console.log("Program validation status:", gl.getProgramParameter(prog, gl.VALIDATE_STATUS))
 
 gl.useProgram(prog)
 
 // Explicitly delete the program. Usually unnecessary.
 gl.deleteProgram(prog)
 // Output: true
-console.log(gl.getProgramParameter(prog, gl.DELETE_STATUS))
+console.log("Program delete status:", gl.getProgramParameter(prog, gl.DELETE_STATUS))
 
 </script>
 

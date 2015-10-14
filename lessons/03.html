@@ -30,11 +30,11 @@ var prog = util.buildProgram(gl, vsource.text, fsource.text)
 gl.useProgram(prog)
 
 // Output: 3
-console.log(gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS))
+console.log("Number of active uniforms:", gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS))
 
-console.log(gl.getActiveUniform(prog, 0))
-console.log(gl.getActiveUniform(prog, 1))
-console.log(gl.getActiveUniform(prog, 2))
+console.log("Info for uniform #0", gl.getActiveUniform(prog, 0))
+console.log("Info for uniform #1", gl.getActiveUniform(prog, 1))
+console.log("Info for uniform #2", gl.getActiveUniform(prog, 2))
 
 // The WebGLUniformLocation objects corresponding to the program uniforms.
 var pos = gl.getUniformLocation(prog, "pos")
@@ -44,7 +44,7 @@ var color = gl.getUniformLocation(prog, "color")
 // A 10px green point along the positive x axis (0.5, 0)
 gl.uniform2f(pos, 0.5, 0)
 // Output: [0.5, 0]
-console.log(gl.getUniform(prog, pos))
+console.log("Value of uniform pos:", gl.getUniform(prog, pos))
 gl.uniform1f(size, 10)
 gl.uniform3f(color, 0, 1, 0)
 // Draw a single point with the specified uniforms.
