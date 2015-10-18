@@ -29,5 +29,10 @@ gl.drawArrays(gl.POINTS, 0, 1)
 gl.progs.fill.set({ psize: 20, color: [1, 0, 0, 1] })
 gl.drawArrays(gl.POINTS, 0, 1)
 
+var pixels = new Uint8Array(64 * 64 * 4)
+for (var j = 0 ; j < pixels.length ; ++j) pixels[j] = j % 4 < 3 ? Math.random() * 255 : 255
+var texture = gl.buildTexture({ pixels: pixels, size: 64 })
+gl.dumpTexture(texture)
+
 </script>
 
