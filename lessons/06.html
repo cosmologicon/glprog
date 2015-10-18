@@ -2,23 +2,23 @@
 <body>
 <p>A 5x5x5 rotating cube of points with various colors and positions. The points are circular with
 lightining from the top left.
-<script src="util.js"></script>
 <script type="x-shader/x-vertex" id="vsource">
-// Rotation angle about the vertical axis in radians
+// Rotation angle about the vertical axis in degrees
 uniform float rotation;
 
 // Indices specifying the point's position within the cube.
 // Runs from (0, 0, 0) in one corner of the cube to (4, 4, 4) in the opposite corner.
 uniform mediump ivec3 index;
 
-// Returns a 2x2 rotation matrix corresponding to the given angle.
-mat2 R(in float theta) {
+// Returns a 2x2 rotation matrix corresponding to the given angle in degrees.
+mat2 R(float theta) {
+	theta = radians(theta);  // convert to radians before taking sin and cos.
 	float S = sin(theta), C = cos(theta);
 	return mat2(C, S, -S, C);
 }
 
-// The amount to tilt toward the viwer, and the corresponding rotation matrix.
-const float tilt = 0.4;
+// The amount to tilt toward the viwer in degrees, and the corresponding rotation matrix.
+const float tilt = 20.0;
 mat2 tiltmatrix = R(tilt);
 
 // Viewport size in pixels.
@@ -54,44 +54,75 @@ uniform ivec3 index;
 void main() {
 	// Base color of this point.
 	vec3 color = (vec3(index) + 1.0) / 6.0;
-
 	// p is a vector that ranges from (-1, -1) in the lower left to (1, 1) in the upper right.
 	vec2 p;
 	p.x = gl_PointCoord.x * 2.0 - 1.0;
 	p.y = 1.0 - gl_PointCoord.y * 2.0;
-	if (length(p) > 1.0) discard;  // Fragment is outside the unit circle.
-
-	// Lighting. shade is a factor related to the alignment of this fragment with the +y axis.
-	float shade = 0.5 + 0.6 * p.y;
-	shade = clamp(shade, 0.0, 1.0);  // Restrict shade to the range [0, 1].
-	color *= shade;
-
+//	if (length(p) > 1.0) discard;  // Fragment is outside the unit circle.
 	gl_FragColor = vec4(color, 1.0);
+	if (length(p) > 1.0) gl_FragColor.a = 0.0;
+}
+</script>
+<script id=boilerplate>
+// WebGL boilerplate: things that were covered in previous lessons.
+
+// Lesson 01: creating the WebGL context
+var gl = document.createElement("canvas").getContext("webgl")
+document.body.appendChild(gl.canvas)
+gl.canvas.width = 854
+gl.canvas.height = 480
+gl.viewport(0, 0, 854, 480)
+gl.clearColor(0, 0, 0, 1)
+gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+// Lesson 02: setting up the program.
+function buildShaderFromScript(scriptname, shadertype) {
+	var source = document.getElementById(scriptname).text
+	var shader = gl.createShader(shadertype)
+	gl.shaderSource(shader, source)
+	gl.compileShader(shader)
+	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+		throw "Error compiling shader " + scriptname + ":\n" + gl.getShaderInfoLog(shader)
+	}
+	return shader
+}
+function buildProgramFromScripts(vscriptname, fscriptname) {
+	var prog = gl.createProgram()
+	gl.attachShader(prog, buildShaderFromScript(vscriptname, gl.VERTEX_SHADER))
+	gl.attachShader(prog, buildShaderFromScript(fscriptname, gl.FRAGMENT_SHADER))
+	gl.linkProgram(prog)
+	if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+		throw "Error linking program:\n" + gl.getProgramInfoLog(prog)
+	}
+	return prog
+}
+var prog = buildProgramFromScripts("vsource", "fsource")
+// Lesson 03: getting the locations of the program uniforms
+gl.useProgram(prog)
+var uniforms = {}
+for (var i = 0 ; i < gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS) ; ++i) {
+	var uniformname = gl.getActiveUniform(prog, i).name
+	uniforms[uniformname] = gl.getUniformLocation(prog, uniformname)
 }
 </script>
 <script>
-var tau = 2 * Math.PI
-
-var gl = util.getContext(854, 480)
 gl.enable(gl.DEPTH_TEST)  // We need depth testing but we don't need blending.
-var prog = util.buildProgram(gl, vsource.text, fsource.text)
-gl.useProgram(prog)
 
+// Update loop, to be called 60 times a second.
 function update() {
-	util.clear(gl, [0, 0, 0])
-	// theta is an angle that increases by 0.3 radians per second.
-	// Modding it by tau ensures that it remains fairly small in magnitude, while still being
-	// continuous for the purpose of trigonometric functions. (Unlike JavaScript, shaders don't
-	// necessarily have enough precision to represent numbers as big as Date.now() while maintaining
-	// the precision we want here.)
-	var theta = 0.3 * 0.001 * Date.now() % tau
-	util.setUniforms(gl, {"rotation": theta})
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	// theta is an angle that increases by 30 degrees per second.
+	var theta = 30 * 0.001 * Date.now()
+	// Rotation by 360 degrees (one full rotation) can be ignored, so modding the rotation angle by
+	// 360 means we don't affect the appearance. The reason for doing this is to keep the magnitude
+	// of theta relatively low, because GLSL's numerical precision is much lower than JavaScript's.
+	theta %= 360
+	gl.uniform1f(uniforms.rotation, theta)
 	// Iterate over each of the 5x5x5 points in the grid and update the index uniform.
 	for (var i = 0 ; i < 5 ; ++i) {
 		for (var j = 0 ; j < 5 ; ++j) {
 			for (var k = 0 ; k < 5 ; ++k) {
-				util.setUniforms(gl, {index: [i, j, k]})
-				util.drawPoint(gl)
+				gl.uniform3i(uniforms.index, i, j, k)
+				gl.drawArrays(gl.POINTS, 0, 1)
 			}
 		}
 	}

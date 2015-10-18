@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <body>
 <p>Build a trivial GL program. Nothing will appear on the viewport.
-<script src="util.js"></script>
+<canvas id=canvas>
 <script>
-var gl = util.getContext(854, 480)
+// Set up the gl context
+var gl = document.getElementById("canvas").getContext("webgl")
+gl.canvas.width = 854
+gl.canvas.height = 480
+gl.viewport(0, 0, 854, 480)
 
 var prog = gl.createProgram()
 
@@ -28,6 +32,11 @@ gl.compileShader(vshader)
 console.log("Vertex shader compile status:", gl.getShaderParameter(vshader, gl.COMPILE_STATUS))
 // Output: ""
 console.log("Vertex shader info log:", gl.getShaderInfoLog(vshader))
+// If compilation fails, it won't throw an error. You need to check the compilation status yourself
+// and if it's false, throw an error that includes the info log.
+if (!gl.getShaderParameter(vshader, gl.COMPILE_STATUS)) {
+	throw "Error compiling vertex shader:\n" + gl.getShaderInfoLog(vshader)
+}
 // Attach the shader to the program
 gl.attachShader(prog, vshader)
 // Explicitly delete the shader. Usually unnecessary.
@@ -37,6 +46,10 @@ gl.deleteShader(vshader)
 var fshader = gl.createShader(gl.FRAGMENT_SHADER)
 gl.shaderSource(fshader, "void main() { }")
 gl.compileShader(fshader)
+// Check compilation status for the fragment shader too.
+if (!gl.getShaderParameter(fshader, gl.COMPILE_STATUS)) {
+	throw "Error compiling fragment shader:\n" + gl.getShaderInfoLog(fshader)
+}
 gl.attachShader(prog, fshader)
 
 // Output: 2
@@ -48,11 +61,19 @@ console.log("The attached shaders:", gl.getAttachedShaders(prog))
 gl.linkProgram(prog)
 // Output: true
 console.log("Program link status:", gl.getProgramParameter(prog, gl.LINK_STATUS))
+// Throw an error if linking failed.
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+	throw "Error linking program:\n" + gl.getProgramInfoLog(prog)
+}
 
 // Optional: validate the program.
 gl.validateProgram(prog)
 // Output: true
 console.log("Program validation status:", gl.getProgramParameter(prog, gl.VALIDATE_STATUS))
+// Throw an error if validation failed.
+if (!gl.getProgramParameter(prog, gl.VALIDATE_STATUS)) {
+	throw "Program validation error:\n" + gl.getProgramInfoLog(prog)
+}
 
 gl.useProgram(prog)
 

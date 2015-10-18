@@ -1,99 +1,188 @@
 <!DOCTYPE html>
 <body>
-<p>Cube map textures. A sphere colored by a cube map rotates at the center. Each of the six faces
-of the cube that texture it has a checkerboard pattern. In the background, a larger inverted sphere
-rotates using the same texture, to demonstrate a skybox.
-<script src="util.js"></script>
+<p>Texture sampling and wrapping options. At the top left is the unscaled 64x64 checkerboard pattern
+that exists in the texture.
+<p>The left column shows a zoomed-out texture rendering using the six various minification
+options (from top to bottom: nearest, linear, nearest_mipmap_nearest, linear_mipmap_nearest,
+nearest_mipmap_linear, linear_mipmap_linear). 
+<p>The next column shows a zoomed-in texture rendering using the two magnification options
+(nearest on top and linear on bottom).
+<p>On the upper right are the three wrap options when the texture coordinates extend outside the
+rendered area (left: repeat, middle: clamp_to_edge, right: mirrored_repeat).
+<p>On the lower right are three options of minification and magnification options, shown using a
+texture zooming in and out. Left: nearest for both minification and magnification. Middle: linear
+minification with nearest magnification. Right: linear for both.
 <script type="x-shader/x-vertex" id="vsource">
-// This vertex shader just places the point at the center with the specified size.
-uniform lowp float pointsize;
+uniform vec2 viewpos;
+uniform mediump float pointsize;
+const vec2 viewportsize = vec2(854.0, 480.0);
 void main() {
-	gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+	vec2 clippos = viewpos / viewportsize * 2.0 - 1.0;
+	gl_Position = vec4(clippos, 0.0, 1.0);
 	gl_PointSize = pointsize;
 }
 </script>
 <script type="x-shader/x-fragment" id="fsource">
-uniform lowp samplerCube sampler;
-uniform mediump float rotation, shade;
-uniform bool invert;
-// 2x2 rotation matrix by the given angle.
-mediump mat2 R(in mediump float angle) {
-	mediump float S = sin(angle), C = cos(angle);
-	return mat2(C, S, -S, C);
-}
+uniform lowp sampler2D sampler;
+uniform mediump float texturescale;
 void main() {
-	// Determine a unit vector from the center of the sphere.
-	mediump vec3 r;
-	r.xy = gl_PointCoord * 2.0 - 1.0;
-	if (length(r.xy) > 1.0) discard;
-	// In the non-inverted case, use the negative z value (front surface).
-	// In the inverted case, use the positive z value (back surface).
-	r.z = -sqrt(1.0 - dot(r.xy, r.xy));
-	if (invert) r.z = -r.z;
-	// Apply a couple rotation matrices that vary with time.
-	r.xz *= R(rotation);
-	mediump float tilt = 0.5 + 0.5 * sin(rotation);
-	r.yz *= R(-tilt);
-	// The textureCube function takes a vector, and gives you the color at the surface of the
-	// cube if you went the direction of that vector from the cube center.
-	gl_FragColor = textureCube(sampler, r);
-	// Darken the color if shade < 1.
-	gl_FragColor.rgb *= shade;
+	// Flip the y coordinate, because gl_PointCoord runs top to bottom, and texture coordinates run
+	// bottom to top.
+	mediump vec2 texpos = vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y);
+	gl_FragColor = texture2D(sampler, texpos * texturescale);
+}
+</script>
+<script id=boilerplate>
+// WebGL boilerplate: things that were covered in previous lessons.
+
+// Lesson 01: creating the WebGL context
+var gl = document.createElement("canvas").getContext("webgl")
+document.body.appendChild(gl.canvas)
+gl.canvas.width = 854
+gl.canvas.height = 480
+gl.viewport(0, 0, 854, 480)
+gl.clearColor(0, 0, 0, 1)
+gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+// Lesson 02: setting up the program.
+function buildShaderFromScript(scriptname, shadertype) {
+	var source = document.getElementById(scriptname).text
+	var shader = gl.createShader(shadertype)
+	gl.shaderSource(shader, source)
+	gl.compileShader(shader)
+	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+		throw "Error compiling shader " + scriptname + ":\n" + gl.getShaderInfoLog(shader)
+	}
+	return shader
+}
+function buildProgramFromScripts(vscriptname, fscriptname) {
+	var prog = gl.createProgram()
+	gl.attachShader(prog, buildShaderFromScript(vscriptname, gl.VERTEX_SHADER))
+	gl.attachShader(prog, buildShaderFromScript(fscriptname, gl.FRAGMENT_SHADER))
+	gl.linkProgram(prog)
+	if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+		throw "Error linking program:\n" + gl.getProgramInfoLog(prog)
+	}
+	return prog
+}
+var prog = buildProgramFromScripts("vsource", "fsource")
+// Lesson 03: getting the locations of the program uniforms
+gl.useProgram(prog)
+var uniforms = {}
+for (var i = 0 ; i < gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS) ; ++i) {
+	var uniformname = gl.getActiveUniform(prog, i).name
+	uniforms[uniformname] = gl.getUniformLocation(prog, uniformname)
 }
 </script>
 <script>
-var tau = 2 * Math.PI
+
+gl.uniform1i(uniforms.sampler, 0)
+gl.activeTexture(gl.TEXTURE0)
+
 // Create the checkerboard image to use as a texture.
-function checkerimg(color0, color1) {
-	var imgcanvas = document.createElement("canvas")
-	imgcanvas.width = 32
-	imgcanvas.height = 32
-	var imgcontext = imgcanvas.getContext("2d")
-	for (var i = 0 ; i < 4 ; ++i) {
-		for (var j = 0 ; j < 4 ; ++j) {
-			imgcontext.fillStyle = (i + j) % 2 ? color1 : color0
-			imgcontext.fillRect(i * 8, j * 8, 8, 8)
+var imgcontext = document.createElement("canvas").getContext("2d")
+imgcontext.canvas.width = 64
+imgcontext.canvas.height = 64
+function drawchecker(x0, y0, scale, color1, color2) {
+	for (var i = 0 ; i < 8 ; ++i) {
+		for (var j = 0 ; j < 8 ; ++j) {
+			imgcontext.fillStyle = (i + j) % 2 ? color1 : color2
+			imgcontext.fillRect(x0 + i * scale, y0 + j * scale, scale, scale)
 		}
 	}
-	return imgcanvas
+}
+drawchecker(0, 0, 8, "red", "white")
+drawchecker(16, 16, 4, "black", "white")
+drawchecker(24, 24, 2, "red", "white")
+drawchecker(28, 28, 1, "black", "white")
+
+// Change this to true to make a smoother image for the texture (exercise 1)
+if (false) {
+	var grad = imgcontext.createRadialGradient(32, 32, 0, 32, 32, 32)
+	grad.addColorStop(0, "white")
+	grad.addColorStop(1, "black")
+	imgcontext.fillStyle = grad
+	imgcontext.fillRect(0, 0, 64, 64)
+}
+// Vertically flip the image when it's loaded into textures.
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
+
+var texture = gl.createTexture()
+gl.bindTexture(gl.TEXTURE_2D, texture)
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imgcontext.canvas)
+// Generate mipmaps for the texture.
+gl.generateMipmap(gl.TEXTURE_2D)
+
+
+// Get the min filter setting (defaults to gl.NEAREST_MIPMAP_LINEAR)
+console.log("Min filter setting (should be %d): %d", gl.NEAREST_MIPMAP_LINEAR,
+	gl.getTexParameter(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER))
+
+// Draw the zoomed out texture with six different minification settings.
+function drawzoomedout(setting, pos) {
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, setting)
+	gl.uniform2fv(uniforms.viewpos, pos)
+	gl.uniform1f(uniforms.pointsize, 25)
+	gl.uniform1f(uniforms.texturescale, 1)
+	gl.drawArrays(gl.POINTS, 0, 1)
 }
 
-var gl = util.getContext(854, 480)
-util.clear(gl, [0, 0, 0])
+// Draw the zoomed in texture with two different magnification settings.
+function drawzoomedin(setting, pos) {
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, setting)
+	gl.uniform2fv(uniforms.viewpos, pos)
+	gl.uniform1f(uniforms.pointsize, 155)
+	gl.uniform1f(uniforms.texturescale, 1)
+	gl.drawArrays(gl.POINTS, 0, 1)
+}
 
-// Create the cube map texture.
-var texture = gl.createTexture()
-gl.activeTexture(gl.TEXTURE0)
-gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture)
-// Make the three checkerboard images to use as textures for the cube map.
-var ximg = checkerimg("red", "blue")
-var yimg = checkerimg("yellow", "red")
-var zimg = checkerimg("yellow", "blue")
-// Apply each of the images to two opposite sides of the cube.
-gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, ximg)
-gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, ximg)
-gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, yimg)
-gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, yimg)
-gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, zimg)
-gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, zimg)
-// Use NEAREST filter for subsampling and supersampling to get sharp edges.
-// Note: don't need to generate mipmaps since the min filter doesn't use mipmaps.
-gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-
-var prog = util.buildProgram(gl, vsource.text, fsource.text)
-gl.useProgram(prog)
-gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture)
-util.setUniform(gl, "sampler", 0)
+// Draw beyond the texture with three different wrapping settings.
+function drawextended(setting, pos) {
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, setting)
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, setting)
+	gl.uniform2fv(uniforms.viewpos, pos)
+	gl.uniform1f(uniforms.pointsize, 160)
+	gl.uniform1f(uniforms.texturescale, 2.5)
+	gl.drawArrays(gl.POINTS, 0, 1)
+}
 
 function update() {
-	util.clear(gl, [0, 0, 0])
-	var theta = 0.5 * 0.001 * Date.now() % tau
-	util.setUniform(gl, "rotation", theta)
-	// The background sphere: inverted so that it's like you're inside it.
-	util.drawPoint(gl, {pointsize: 2200, shade: 0.1, invert: true})
-	// The foreground sphere.
-	util.drawPoint(gl, {pointsize: 300, shade: 1, invert: false})
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+	// Draw the unzoomed texture in the upper left.
+	gl.uniform2fv(uniforms.viewpos, [40, 440])
+	gl.uniform1f(uniforms.pointsize, 64)
+	gl.uniform1f(uniforms.texturescale, 1)
+	gl.drawArrays(gl.POINTS, 0, 1)
+
+	drawzoomedout(gl.NEAREST, [40, 360])
+	drawzoomedout(gl.LINEAR, [40, 320])
+	drawzoomedout(gl.NEAREST_MIPMAP_NEAREST, [40, 280])
+	drawzoomedout(gl.LINEAR_MIPMAP_NEAREST, [40, 240])
+	drawzoomedout(gl.NEAREST_MIPMAP_LINEAR, [40, 200])
+	drawzoomedout(gl.LINEAR_MIPMAP_LINEAR, [40, 160])
+
+	drawzoomedin(gl.NEAREST, [180, 380])
+	drawzoomedin(gl.LINEAR, [180, 190])
+
+	drawextended(gl.REPEAT, [400, 360])
+	drawextended(gl.CLAMP_TO_EDGE, [580, 360])
+	drawextended(gl.MIRRORED_REPEAT, [760, 360])
+
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+	var scale = Math.exp(2 * Math.sin(0.2 * 0.001 * Date.now()))
+	gl.uniform1f(uniforms.texturescale, scale)
+	gl.uniform1f(uniforms.pointsize, 128)
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+	gl.uniform2fv(uniforms.viewpos, [400, 160])
+	gl.drawArrays(gl.POINTS, 0, 1)
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+	gl.uniform2fv(uniforms.viewpos, [540, 160])
+	gl.drawArrays(gl.POINTS, 0, 1)
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+	gl.uniform2fv(uniforms.viewpos, [680, 160])
+	gl.drawArrays(gl.POINTS, 0, 1)
 }
 setInterval(update, 1000 / 60)
 

@@ -13,8 +13,7 @@ values of 100%, 75%, 50%, and 25%. The settings for the columns are, from left t
 <li>Standard depth testing and combined blending, with alpha color mask disabled.
 <li>Standard depth testing and combined blending, with alpha color mask and depth mask disabled.
 </ol>
-
-<script src="util.js"></script>
+<canvas id=canvas></canvas>
 <script type="x-shader/x-vertex" id="vsource">
 // Vertex shader source
 
@@ -44,33 +43,83 @@ void main() {
 	gl_FragColor = vec4(color, alpha);
 }
 </script>
-<script>
-var gl = util.getContext(854, 480)
-util.clear(gl, [0, 0, 0])
+<script id=boilerplate>
+// WebGL boilerplate: things that were covered in previous lessons.
 
-var prog = util.buildProgram(gl, vsource.text, fsource.text)
+// Lesson 01: creating the WebGL context
+var gl = document.createElement("canvas").getContext("webgl")
+document.body.appendChild(gl.canvas)
+gl.canvas.width = 854
+gl.canvas.height = 480
+gl.viewport(0, 0, 854, 480)
+gl.clearColor(0, 0, 0, 1)
+gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+// Lesson 02: setting up the program.
+function buildShaderFromScript(scriptname, shadertype) {
+	var source = document.getElementById(scriptname).text
+	var shader = gl.createShader(shadertype)
+	gl.shaderSource(shader, source)
+	gl.compileShader(shader)
+	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+		throw "Error compiling shader " + scriptname + ":\n" + gl.getShaderInfoLog(shader)
+	}
+	return shader
+}
+function buildProgramFromScripts(vscriptname, fscriptname) {
+	var prog = gl.createProgram()
+	gl.attachShader(prog, buildShaderFromScript(vscriptname, gl.VERTEX_SHADER))
+	gl.attachShader(prog, buildShaderFromScript(fscriptname, gl.FRAGMENT_SHADER))
+	gl.linkProgram(prog)
+	if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+		throw "Error linking program:\n" + gl.getProgramInfoLog(prog)
+	}
+	return prog
+}
+var prog = buildProgramFromScripts("vsource", "fsource")
+// Lesson 03: getting the locations of the program uniforms
 gl.useProgram(prog)
-util.setUniforms(gl, {viewportsize: [854, 480, 1000], size: 60})
+var uniforms = {}
+for (var i = 0 ; i < gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS) ; ++i) {
+	var uniformname = gl.getActiveUniform(prog, i).name
+	uniforms[uniformname] = gl.getUniformLocation(prog, uniformname)
+}
+</script>
+<script>
+gl.uniform3f(uniforms.viewportsize, 854, 480, 1000)
+gl.uniform1f(uniforms.size, 60)
 
 // Draw three points.
 // The points are drawn in the order red, yellow, blue, with red closest to the viewer and blue
 // farthest. (Whether they actually appear like that depends on the depth settings.)
 function drawpoints(x0, y0, alpha) {
-	util.setUniform(gl, "alpha", alpha)
-	util.setUniforms(gl, {viewpos: [x0, y0, 500], color: [1, 0, 0]})
-	util.drawPoint(gl)
-	util.setUniforms(gl, {viewpos: [x0+15, y0-15, 600], color: [1, 1, 0]})
-	util.drawPoint(gl)
-	util.setUniforms(gl, {viewpos: [x0+30, y0-30, 700], color: [0, 0, 1]})
-	util.drawPoint(gl)
+	gl.uniform1f(uniforms.alpha, alpha)
+	// red point
+	gl.uniform3f(uniforms.viewpos, x0, y0, 500)
+	gl.uniform3f(uniforms.color, 1, 0, 0)
+	gl.drawArrays(gl.POINTS, 0, 1)
+	// yellow point
+	gl.uniform3f(uniforms.viewpos, x0 + 15, y0 - 15, 600)
+	gl.uniform3f(uniforms.color, 1, 1, 0)
+	gl.drawArrays(gl.POINTS, 0, 1)
+	// blue point
+	gl.uniform3f(uniforms.viewpos, x0 + 30, y0 - 30, 700)
+	gl.uniform3f(uniforms.color, 0, 0, 1)
+	gl.drawArrays(gl.POINTS, 0, 1)
 }
 // Draw a column of four sets of three points with different alpha values.
 function drawcolumn(x0) {
 	// Vertical white stripe
-	util.clear(gl, [1, 1, 1], [x0 + 5, 0, 20, 480])
+	gl.enable(gl.SCISSOR_TEST)
+	gl.scissor(x0 + 5, 0, 20, 480)
+	gl.clearColor(1, 1, 1, 1)
+	gl.clear(gl.COLOR_BUFFER_BIT)
+	gl.disable(gl.SCISSOR_TEST)
+	// Top set of points
 	drawpoints(x0, 400, 1)
+	// Second set of points
 	drawpoints(x0, 300, 0.75)
 	drawpoints(x0, 200, 0.5)
+	// Bottom set of points
 	drawpoints(x0, 100, 0.25)
 }
 
@@ -86,13 +135,6 @@ console.log("Value that the depth buffer is cleared to:", gl.getParameter(gl.DEP
 console.log("Depth function (should be %d): %d", gl.LESS, gl.getParameter(gl.DEPTH_FUNC))
 // Output: false
 console.log("Is depth testing enabled:", gl.getParameter(gl.DEPTH_TEST))
-
-// Uncommenting the following two lines will prevent the blue point from being drawn in columns
-// where depth testing is enabled, by filling the depth buffer with a value corresponding to a depth
-// closer than the blue point.
-//gl.clearDepth(0.65)
-//gl.clear(gl.DEPTH_BUFFER_BIT)
-
 
 // Column 1: no depth testing and no blending.
 drawcolumn(60)

@@ -1,17 +1,10 @@
 <!DOCTYPE html>
 <body>
-<p>Texture mipmap and wrapping options. At the top left is the unscaled checkerboard pattern that
-exists in the texture.
-<p>The left column shows a zoomed-out texture rendering using the six various subsampling
-options (from top to bottom: nearest, linear, nearest_mipmap_nearest, linear_mipmap_nearest,
-nearest_mipmap_linear, linear_mipmap_linear). 
-<p>The next column shows a zoomed-in texture rendering using the two supersampling options
-(nearest on top and linear on bottom).
-<p>On the right are the three wrap options when the texture coordinates extend outside the texture
-(upper left: repeat, lower left: clamp_to_edge, upper right: mirrored_repeat).
-<script src="util.js"></script>
+<p>Textures. On the left is a texture loaded from a canvas element, showing an orange circle with
+the word "textures!" over it in white. On the right is a texture loaded from raw data, with the red
+channel increasing to the right, and the green channel increasing to the top.
 <script type="x-shader/x-vertex" id="vsource">
-uniform vec2 viewpos;
+uniform vec2 viewpos;  // Viewport position (pixels)
 uniform mediump float pointsize;
 const vec2 viewportsize = vec2(854.0, 480.0);
 void main() {
@@ -22,105 +15,140 @@ void main() {
 </script>
 <script type="x-shader/x-fragment" id="fsource">
 uniform lowp sampler2D sampler;
-uniform mediump float texturescale;
 void main() {
-	mediump vec2 texpos = gl_PointCoord * texturescale;
+	// Flip the y coordinate, because gl_PointCoord runs top to bottom, and texture coordinates run
+	// bottom to top.
+	mediump vec2 texpos = vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y);
 	gl_FragColor = texture2D(sampler, texpos);
-	// See also texture2DProj and texture2DLod
-	// what about sampler cubes?
+}
+</script>
+<script id=boilerplate>
+// WebGL boilerplate: things that were covered in previous lessons.
+
+// Lesson 01: creating the WebGL context
+var gl = document.createElement("canvas").getContext("webgl")
+document.body.appendChild(gl.canvas)
+gl.canvas.width = 854
+gl.canvas.height = 480
+gl.viewport(0, 0, 854, 480)
+gl.clearColor(0, 0, 0, 1)
+gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+// Lesson 02: setting up the program.
+function buildShaderFromScript(scriptname, shadertype) {
+	var source = document.getElementById(scriptname).text
+	var shader = gl.createShader(shadertype)
+	gl.shaderSource(shader, source)
+	gl.compileShader(shader)
+	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+		throw "Error compiling shader " + scriptname + ":\n" + gl.getShaderInfoLog(shader)
+	}
+	return shader
+}
+function buildProgramFromScripts(vscriptname, fscriptname) {
+	var prog = gl.createProgram()
+	gl.attachShader(prog, buildShaderFromScript(vscriptname, gl.VERTEX_SHADER))
+	gl.attachShader(prog, buildShaderFromScript(fscriptname, gl.FRAGMENT_SHADER))
+	gl.linkProgram(prog)
+	if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+		throw "Error linking program:\n" + gl.getProgramInfoLog(prog)
+	}
+	return prog
+}
+var prog = buildProgramFromScripts("vsource", "fsource")
+// Lesson 03: getting the locations of the program uniforms
+gl.useProgram(prog)
+var uniforms = {}
+for (var i = 0 ; i < gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS) ; ++i) {
+	var uniformname = gl.getActiveUniform(prog, i).name
+	uniforms[uniformname] = gl.getUniformLocation(prog, uniformname)
 }
 </script>
 <script>
-// Create the checkerboard image to use as a texture.
-var imgcanvas = document.createElement("canvas")
-imgcanvas.width = 64
-imgcanvas.height = 64
-var imgcontext = imgcanvas.getContext("2d")
-function drawchecker(x0, y0, scale) {
-	for (var i = 0 ; i < 8 ; ++i) {
-		for (var j = 0 ; j < 8 ; ++j) {
-			imgcontext.fillStyle = (i + j) % 2 ? "red" : "blue"
-			imgcontext.fillRect(x0 + i * scale, y0 + j * scale, scale, scale)
-		}
-	}
-}
-drawchecker(0, 0, 8)
-drawchecker(16, 16, 4)
-drawchecker(24, 24, 2)
-drawchecker(28, 28, 1)
-
-var gl = util.getContext(854, 480)
-util.clear(gl, [0, 0, 0])
+// We need blending (for transparency) but not depth testing
+gl.enable(gl.BLEND)
+gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, 0, 1)
 
 // Output: your maximum texture size (probably a power of 2 at least 2048)
-console.log("Max texture size:", gl.getParameter(gl.MAX_TEXTURE_SIZE))
+var maxsize = gl.getParameter(gl.MAX_TEXTURE_SIZE)
+console.log("Max texture size: %dx%d", maxsize, maxsize)
 // Output: number of textures that can be accessed by fragment shaders (at least 8)
 console.log("Max number of fragment textures:", gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS))
 // Output: number of textures that can be accessed by vertex shaders (can be 0)
 console.log("Max number of vertex textures:", gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS))
-// 
-console.log("Max number of total textures:", gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS))
+// Output: number of texture units (at least 8)
+console.log("Total number of texture units:", gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS))
 
-// Uncomment to vertically flip images when they're loaded into textures.
-//gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
+// Create a canvas with an orange circle and white text on it.
+var imgcanvas = document.createElement("canvas")
+imgcanvas.width = 256
+imgcanvas.height = 256
+var imgcontext = imgcanvas.getContext("2d")
+imgcontext.beginPath()
+imgcontext.arc(128, 128, 64, 0, 2 * Math.PI)
+imgcontext.fillStyle = "peru"
+imgcontext.fill()
+imgcontext.fillStyle = "white"
+imgcontext.textAlign = "center"
+imgcontext.textBaseline = "middle"
+imgcontext.font = "44px 'sans-serif'"
+imgcontext.fillText("textures!", 128, 128)
 
-// Create the texture.
-var texture = gl.createTexture()
-// Bind the texture to the target TEXTURE_2D. Operations on TEXTURE_2D will apply to the
-// currently bound texture.
-gl.bindTexture(gl.TEXTURE_2D, texture)
-// Load the image data.
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imgcanvas)
-// Generate mipmaps for the texture.
-gl.generateMipmap(gl.TEXTURE_2D)
+// Create an array of data in the range 0-255 big enough to fill a 256x256 texture with 3 bytes per
+// pixel.
+var data = []
+for (var y = 0 ; y < 256 ; ++y) {
+	for (var x = 0 ; x < 256 ; ++x) {
+		var r = x, g = y, b = 127
+		data.push(r, g, b)
+	}
+}
 
-// gl.texSubImage2D
-// gl.texParameterf(gl.TEXTURE_2D, ..., value)
+// Create two textures.
+var imgtexture = gl.createTexture()
+var datatexture = gl.createTexture()
 
-
-console.log(gl.getParameter(gl.ACTIVE_TEXTURE))
-
-
-
-
-var prog = util.buildProgram(gl, vsource.text, fsource.text)
-gl.useProgram(prog)
-gl.activeTexture(gl.TEXTURE17)
-gl.bindTexture(gl.TEXTURE_2D, texture)
-util.setUniform(gl, "sampler", 17)
-
-// Draw the unzoomed texture in the upper left.
-util.drawPoint(gl, {viewpos: [40, 440], pointsize: 64, texturescale: 1})
-
-// Draw the zoomed out texture with six different subsampling settings.
+// Bind the textures to the units TEXTURE3 and TEXTURE4.
+// Setting the min filter to nearest will be explained in Lesson 09.
+gl.activeTexture(gl.TEXTURE3)
+gl.bindTexture(gl.TEXTURE_2D, imgtexture)
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-util.drawPoint(gl, {viewpos: [60, 320], pointsize: 25, texturescale: 1})
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-util.drawPoint(gl, {viewpos: [60, 280], pointsize: 25, texturescale: 1})
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST)
-util.drawPoint(gl, {viewpos: [60, 240], pointsize: 25, texturescale: 1})
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST)
-util.drawPoint(gl, {viewpos: [60, 200], pointsize: 25, texturescale: 1})
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR)
-util.drawPoint(gl, {viewpos: [60, 160], pointsize: 25, texturescale: 1})
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
-util.drawPoint(gl, {viewpos: [60, 120], pointsize: 25, texturescale: 1})
+gl.activeTexture(gl.TEXTURE4)
+gl.bindTexture(gl.TEXTURE_2D, datatexture)
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 
-// Draw the zoomed in texture with two different subsampling settings.
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-util.drawPoint(gl, {viewpos: [220, 300], pointsize: 155, texturescale: 1})
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-util.drawPoint(gl, {viewpos: [220, 110], pointsize: 155, texturescale: 1})
+// Outputs: true
+console.log("Is this a texture:", gl.isTexture(imgtexture))
 
-// Draw beyond the texture with three different wrapping settings.
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-util.drawPoint(gl, {viewpos: [480, 300], pointsize: 160, texturescale: 2.5})
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-util.drawPoint(gl, {viewpos: [480, 100], pointsize: 160, texturescale: 2.5})
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT)
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT)
-util.drawPoint(gl, {viewpos: [680, 300], pointsize: 160, texturescale: 2.5})
+// Switch back to the unit TEXTURE3.
+gl.activeTexture(gl.TEXTURE3)
+// Currently active texture unit
+console.log("Active texture unit (should be %d): %d", gl.TEXTURE3, gl.getParameter(gl.ACTIVE_TEXTURE))
+// Flip along the y-axis to keep the image data upright
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
+// Output: true
+console.log("Flip y-axis on texture loading:", gl.getParameter(gl.UNPACK_FLIP_Y_WEBGL))
+// Load the image data into the texture in unit TEXTURE3.
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imgcanvas)
+
+// Don't flip along the y-axis any longer.
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
+// Load the random data into the texture in unit TEXTURE4.
+gl.activeTexture(gl.TEXTURE4)
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 256, 256, 0, gl.RGB, gl.UNSIGNED_BYTE, new Uint8Array(data))
+
+
+gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+// Draw the image texture
+gl.uniform2f(uniforms.viewpos, 240, 240)
+gl.uniform1f(uniforms.pointsize, 256)
+gl.uniform1i(uniforms.sampler, 3)
+gl.drawArrays(gl.POINTS, 0, 1)
+
+// Draw the data texture
+gl.uniform2f(uniforms.viewpos, 620, 240)
+gl.uniform1f(uniforms.pointsize, 256)
+gl.uniform1i(uniforms.sampler, 4)
+gl.drawArrays(gl.POINTS, 0, 1)
 
 </script>

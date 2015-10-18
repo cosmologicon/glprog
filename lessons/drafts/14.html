@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<body>
+<p>Triangle face culling.
+<script src="util.js"></script>
+<script type="x-shader/x-vertex" id="vsource">
+attribute vec2 pos;
+void main() {
+	gl_Position = vec4(pos / vec2(854.0, 480.0) * 2.0, 0.0, 1.0);
+}
+</script>
+<script type="x-shader/x-fragment" id="fsource">
+precision mediump float;
+uniform vec3 color;
+void main() {
+	gl_FragColor = vec4(color, 1.0);
+}
+</script>
+<script>
+var tau = 2 * Math.PI
+var gl = util.getContext(854, 480)
+util.clear(gl, [0, 0, 0])
+
+var prog = util.buildProgram(gl, vsource.text, fsource.text)
+gl.useProgram(prog)
+var pos = gl.getAttribLocation(prog, "pos")
+gl.enableVertexAttribArray(pos)
+
+var circledata = []
+for (var i = 0 ; i < 60 ; ++i) {
+	var angle = tau * i / 60
+	circledata.push(120 * Math.cos(angle), 120 * Math.sin(angle))
+}
+var circlebuffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, circlebuffer)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(circledata), gl.STATIC_DRAW)
+
+var raydata = []
+for (var i = 0 ; i < 8 ; ++i) {
+	var angle = tau * i / 8
+	// Left corner
+	raydata.push(140 * Math.cos(angle + 0.3), 140 * Math.sin(angle + 0.3))
+	// right corner
+	raydata.push(140 * Math.cos(angle - 0.3), 140 * Math.sin(angle - 0.3))
+	// Outer corner
+	raydata.push(220 * Math.cos(angle), 220 * Math.sin(angle))
+}
+var raybuffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, raybuffer)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(raydata), gl.STATIC_DRAW)
+
+var shadedata = [-80, 0, -20, 0, -100, 60, -10, 40, 100, 60, 10, 40, 80, 0, 20, 0]
+var shadebuffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, shadebuffer)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(shadedata), gl.STATIC_DRAW)
+
+var drawlines = false
+gl.canvas.onmousemove = function () { drawlines = true }
+gl.canvas.onmouseout = function () { drawlines = false }
+function update() {
+	util.clear(gl, [0.8, 0.8, 1])
+
+	// draw the rays using gl.TRIANGLES
+	gl.bindBuffer(gl.ARRAY_BUFFER, raybuffer)
+	gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
+	util.setUniforms(gl, {color: [1, 0.9, 0]})
+	gl.drawArrays(gl.TRIANGLES, 0, raydata.length/2)
+	if (drawlines) {
+		util.setUniforms(gl, {color: [0, 0, 0]})
+		gl.drawArrays(gl.LINE_STRIP, 0, raydata.length/2)
+	}
+
+	// draw the circle using gl.TRIANGLE_FAN
+	gl.bindBuffer(gl.ARRAY_BUFFER, circlebuffer)
+	gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
+	util.setUniforms(gl, {color: [1, 1, 0]})
+	gl.drawArrays(gl.TRIANGLE_FAN, 0, circledata.length/2)
+	if (drawlines) {
+		util.setUniforms(gl, {color: [0, 0, 0]})
+		gl.drawArrays(gl.LINE_STRIP, 0, circledata.length/2)
+	}
+
+	// draw the shades using gl.TRIANGLE_STRIP
+	gl.bindBuffer(gl.ARRAY_BUFFER, shadebuffer)
+	gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
+	util.setUniforms(gl, {color: [0, 0, 0]})
+	gl.drawArrays(gl.TRIANGLE_STRIP, 0, shadedata.length/2)
+	if (drawlines) {
+		util.setUniforms(gl, {color: [1, 0, 0.5]})
+		gl.drawArrays(gl.LINE_STRIP, 0, shadedata.length/2)
+	}
+}
+setInterval(update, 1000 / 60)
+</script>
+
+
