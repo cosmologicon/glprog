@@ -13,15 +13,15 @@ WebGL specifically.
 
 ## Lesson listing
 
-* Lesson 01. the WebGL context
-* Lesson 02. WebGL programs
-* Lesson 03. drawing single points
-* Lesson 04. depth and blending
-* Lesson 05. GLSL part 1: types and precision
-* Lesson 06. GLSL part 2: functions
-* Lesson 07. GLSL part 3: shading
-* Lesson 08. textures part 1: loading data
-* Lesson 09. textures part 2: texture settings
+* [Lesson 01. the WebGL context](01.md)
+* [Lesson 02. WebGL programs](02.md)
+* [Lesson 03. drawing single points](03.md)
+* [Lesson 04. depth and blending](04.md)
+* [Lesson 05. GLSL part 1: types and precision](05.md)
+* [Lesson 06. GLSL part 2: functions](06.md)
+* [Lesson 07. GLSL part 3: shading](07.md)
+* [Lesson 08. textures part 1: loading data](08.md)
+* [Lesson 09. textures part 2: texture settings](09.md)
 
 More lessons coming soon!
 
