@@ -1,0 +1,900 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="640px"
+   height="480px"
+   id="svg7026"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="flow-diagram.svg">
+  <defs
+     id="defs7028">
+    <linearGradient
+       id="linearGradient10550">
+      <stop
+         id="stop10552"
+         offset="0"
+         style="stop-color:#ffffe0;stop-opacity:1;" />
+      <stop
+         id="stop10554"
+         offset="1"
+         style="stop-color:#f3d900;stop-opacity:1;" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient10520">
+      <stop
+         id="stop10522"
+         offset="0"
+         style="stop-color:#f6e0ff;stop-opacity:1;" />
+      <stop
+         id="stop10524"
+         offset="1"
+         style="stop-color:#ac00f3;stop-opacity:1;" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient10157">
+      <stop
+         style="stop-color:#ebffef;stop-opacity:1;"
+         offset="0"
+         id="stop10159" />
+      <stop
+         style="stop-color:#ccffd9;stop-opacity:1;"
+         offset="1"
+         id="stop10161" />
+    </linearGradient>
+    <marker
+       inkscape:stockid="TriangleInM"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="TriangleInM"
+       style="overflow:visible">
+      <path
+         id="path8639"
+         d="M 5.77,0.0 L -2.88,5.0 L -2.88,-5.0 L 5.77,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         transform="scale(-0.4)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleInS"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="TriangleInS"
+       style="overflow:visible">
+      <path
+         id="path8642"
+         d="M 5.77,0.0 L -2.88,5.0 L -2.88,-5.0 L 5.77,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         transform="scale(-0.2)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutS"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="TriangleOutS"
+       style="overflow:visible">
+      <path
+         id="path8651"
+         d="M 5.77,0.0 L -2.88,5.0 L -2.88,-5.0 L 5.77,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         transform="scale(0.2)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Sstart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Sstart"
+       style="overflow:visible">
+      <path
+         id="path8515"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         transform="scale(0.2) translate(6,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Send"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Send"
+       style="overflow:visible;">
+      <path
+         id="path8518"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;"
+         transform="scale(0.2) rotate(180) translate(6,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lstart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lstart"
+       style="overflow:visible">
+      <path
+         id="path8503"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         transform="scale(0.8) translate(12.5,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lend"
+       style="overflow:visible;">
+      <path
+         id="path8506"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;"
+         transform="scale(0.8) rotate(180) translate(12.5,0)" />
+    </marker>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient10550"
+       id="linearGradient10163"
+       x1="246.34695"
+       y1="-70.826157"
+       x2="350.57153"
+       y2="32.311138"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient10550"
+       id="linearGradient10508"
+       gradientUnits="userSpaceOnUse"
+       x1="246.34695"
+       y1="-70.826157"
+       x2="362.83395"
+       y2="32.311138"
+       gradientTransform="translate(60.343972,349.15603)" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient10520"
+       id="linearGradient10512"
+       gradientUnits="userSpaceOnUse"
+       x1="242.47461"
+       y1="-50.819065"
+       x2="324.75592"
+       y2="17.467167"
+       gradientTransform="translate(149.7305,147.14894)" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient10520"
+       id="linearGradient10528"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-107.78014,225.88653)"
+       x1="242.47461"
+       y1="-50.819065"
+       x2="331.85522"
+       y2="21.984898" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient10157"
+       id="linearGradient10548"
+       gradientUnits="userSpaceOnUse"
+       x1="300.19739"
+       y1="-23.364748"
+       x2="631.23273"
+       y2="262.7728"
+       gradientTransform="translate(-160.63861,31.03246)" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.77472527"
+     inkscape:cx="300.35881"
+     inkscape:cy="290.44552"
+     inkscape:current-layer="layer1"
+     inkscape:document-units="px"
+     showgrid="false"
+     inkscape:window-width="1855"
+     inkscape:window-height="1056"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7031">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1"
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer">
+    <rect
+       ry="8.6708345"
+       y="-20.626591"
+       x="95.835533"
+       height="333.14258"
+       width="401.14017"
+       id="rect10546"
+       style="fill:url(#linearGradient10548);fill-opacity:1;stroke:#77ff91;stroke-width:4;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:9;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:9.20800000000000018"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140" />
+    <rect
+       ry="8.6708345"
+       y="99.837585"
+       x="374.83212"
+       height="60.358063"
+       width="107.82734"
+       id="rect10510"
+       style="fill:url(#linearGradient10512);fill-opacity:1.0;stroke:#ba77ff;stroke-width:4;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:9;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:9.20800000000000018"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140" />
+    <rect
+       ry="8.6708345"
+       y="287.0007"
+       x="264.79312"
+       height="84.882912"
+       width="194.30965"
+       id="rect10506"
+       style="fill:url(#linearGradient10508);fill-opacity:1.0;stroke:#ffaa77;stroke-width:4;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:9;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:9.20800000000000018"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot7915"
+       style="fill:black;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;font-family:Droid Sans;font-style:normal;font-weight:normal;font-size:22px;line-height:100%;letter-spacing:0px;word-spacing:0px;-inkscape-font-specification:Droid Sans;font-stretch:normal;font-variant:normal;text-anchor:middle;text-align:center;writing-mode:lr"><flowRegion
+         id="flowRegion7917"><rect
+           id="rect7919"
+           width="180.70923"
+           height="52.921986"
+           x="253.63831"
+           y="261.85815" /></flowRegion><flowPara
+         id="flowPara7921"></flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot7927"
+       style="font-size:22px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Mono"><flowRegion
+         id="flowRegion7929"><rect
+           id="rect7931"
+           width="164.57446"
+           height="37.432625"
+           x="251.05673"
+           y="300.58157"
+           style="-inkscape-font-specification:Droid Sans Mono;font-family:Droid Sans Mono;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal" /></flowRegion><flowPara
+         id="flowPara7933" /></flowRoot>    <rect
+       style="fill:url(#linearGradient10163);fill-opacity:1.0;stroke:#ffaa77;stroke-width:4;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:9;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:9.20800000000000018"
+       id="rect10095"
+       width="158.81319"
+       height="84.882912"
+       x="204.44914"
+       y="-62.155323"
+       ry="8.6708345"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot7832"
+       style="font-size:40px;font-style:normal;font-weight:bold;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Bitstream Vera Sans;-inkscape-font-specification:Droid Sans Bold"
+       transform="translate(167.42875,-76.187507)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140"><flowRegion
+         id="flowRegion7834"><rect
+           id="rect7836"
+           width="113.58865"
+           height="51.631207"
+           x="63.248226"
+           y="33.390068"
+           style="font-weight:bold;text-align:center;line-height:100%;letter-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;-inkscape-font-specification:Droid Sans Bold" /></flowRegion><flowPara
+         id="flowPara7842"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold">JavaScript</flowPara><flowPara
+         id="flowPara7849"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold">(client)</flowPara></flowRoot>    <flowRoot
+       transform="translate(167.42875,-76.187507)"
+       style="font-size:40px;font-style:normal;font-weight:bold;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans;-inkscape-font-specification:Droid Sans Bold"
+       id="flowRoot10119"
+       xml:space="preserve"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140"><flowRegion
+         id="flowRegion10121"><rect
+           style="font-weight:bold;text-align:center;line-height:100%;letter-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;-inkscape-font-specification:Droid Sans Bold"
+           y="33.390068"
+           x="63.248226"
+           height="51.631207"
+           width="113.58865"
+           id="rect10123" /></flowRegion><flowPara
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         id="flowPara10125">JavaScript</flowPara><flowPara
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         id="flowPara10127">(client)</flowPara></flowRoot>    <g
+       id="g10394"
+       transform="translate(-599.3398,-115.31719)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140">
+      <flowRoot
+         transform="translate(627.95094,-10.952633)"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         id="flowRoot7851"
+         xml:space="preserve"><flowRegion
+           id="flowRegion7853"><rect
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;-inkscape-font-specification:Droid Sans Bold"
+             y="115.35461"
+             x="64.539009"
+             height="65.829788"
+             width="110.3617"
+             id="rect7855" /></flowRegion><flowPara
+           id="flowPara7857">WebGL</flowPara><flowPara
+           id="flowPara7859">(server)</flowPara></flowRoot>      <flowRoot
+         xml:space="preserve"
+         id="flowRoot10187"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         transform="translate(627.95094,-10.952633)"><flowRegion
+           id="flowRegion10189"><rect
+             id="rect10191"
+             width="110.3617"
+             height="65.829788"
+             x="64.539009"
+             y="115.35461"
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;-inkscape-font-specification:Droid Sans Bold" /></flowRegion><flowPara
+           id="flowPara10193">WebGL</flowPara><flowPara
+           id="flowPara10195">(server)</flowPara></flowRoot>    </g>
+    <g
+       id="g10311"
+       transform="translate(-337.62232,-141.5095)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140">
+      <flowRoot
+         transform="translate(627.95094,-10.952633)"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         id="flowRoot7869"
+         xml:space="preserve"><flowRegion
+           id="flowRegion7871"><rect
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;-inkscape-font-specification:Droid Sans Bold"
+             y="260.56738"
+             x="78.092201"
+             height="59.375889"
+             width="120.68794"
+             id="rect7873" /></flowRegion><flowPara
+           id="flowPara7875">vertex</flowPara><flowPara
+           id="flowPara7877">shader</flowPara></flowRoot>      <flowRoot
+         xml:space="preserve"
+         id="flowRoot10197"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         transform="translate(627.95094,-10.952633)"><flowRegion
+           id="flowRegion10199"><rect
+             id="rect10201"
+             width="120.68794"
+             height="59.375889"
+             x="78.092201"
+             y="260.56738"
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;-inkscape-font-specification:Droid Sans Bold" /></flowRegion><flowPara
+           id="flowPara10203">vertex</flowPara><flowPara
+           id="flowPara10205">shader</flowPara></flowRoot>    </g>
+    <rect
+       style="fill:url(#linearGradient10528);fill-opacity:1;stroke:#ba77ff;stroke-width:4;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:9;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:9.20800000000000018"
+       id="rect10526"
+       width="125.89826"
+       height="64.2304"
+       x="117.32148"
+       y="178.57518"
+       ry="8.6708345"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140" />
+    <g
+       id="g10323"
+       transform="translate(-590.93763,-134.98287)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140">
+      <flowRoot
+         transform="translate(627.95094,-10.952633)"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         id="flowRoot7879"
+         xml:space="preserve"><flowRegion
+           id="flowRegion7881"><rect
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;-inkscape-font-specification:Droid Sans Bold"
+             y="337.3688"
+             x="81.319153"
+             height="58.730495"
+             width="125.20567"
+             id="rect7883" /></flowRegion><flowPara
+           id="flowPara7885">fragment</flowPara><flowPara
+           id="flowPara7887">shader</flowPara></flowRoot>      <flowRoot
+         xml:space="preserve"
+         id="flowRoot10207"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         transform="translate(627.95094,-10.952633)"><flowRegion
+           id="flowRegion10209"><rect
+             id="rect10211"
+             width="125.20567"
+             height="58.730495"
+             x="81.319153"
+             y="337.3688"
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;-inkscape-font-specification:Droid Sans Bold" /></flowRegion><flowPara
+           id="flowPara10213">fragment</flowPara><flowPara
+           id="flowPara10215">shader</flowPara></flowRoot>    </g>
+    <g
+       id="g10406"
+       transform="translate(-403.0461,-118.75177)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140">
+      <flowRoot
+         transform="translate(516.31206,353.67376)"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         id="flowRoot7963"
+         xml:space="preserve"><flowRegion
+           id="flowRegion7965"><rect
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;-inkscape-font-specification:Droid Sans Bold"
+             y="72.113472"
+             x="121.33334"
+             height="87.773048"
+             width="254.28369"
+             id="rect7967" /></flowRegion><flowPara
+           id="flowPara7969">framebuffer</flowPara><flowPara
+           id="flowPara7971">(e.g. viewport)</flowPara></flowRoot>      <flowRoot
+         xml:space="preserve"
+         id="flowRoot10275"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         transform="translate(516.31206,353.67376)"><flowRegion
+           id="flowRegion10277"><rect
+             id="rect10279"
+             width="254.28369"
+             height="87.773048"
+             x="121.33334"
+             y="72.113472"
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;-inkscape-font-specification:Droid Sans Bold" /></flowRegion><flowPara
+           id="flowPara10281">framebuffer</flowPara><flowPara
+           id="flowPara10283">(e.g. viewport)</flowPara></flowRoot>    </g>
+    <path
+       sodipodi:nodetypes="cccccccc"
+       inkscape:connector-curvature="0"
+       id="path10530"
+       d="M 356.74193,-4.6993403 345.13012,11.450582 c 32.43086,12.262412 39.62178,42.078788 42.36469,76.607157 l -9.03882,-0.816844 16.02025,21.272485 10.56723,-23.915763 -9.24487,2.824681 C 390.79683,49.344284 383.36427,16.75988 356.74193,-4.6993403 z"
+       style="fill:#bbbbff;fill-opacity:1;stroke:#9999ff;stroke-width:0.96969718;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:9;stroke-opacity:1;stroke-dasharray:none"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140" />
+    <g
+       id="g10450"
+       transform="translate(-478.89763,-78.188682)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140">
+      <flowRoot
+         transform="matrix(0.66182359,0,0,0.66182359,652.86235,-2.7905858)"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         id="flowRoot7905"
+         xml:space="preserve"><flowRegion
+           id="flowRegion7907"><rect
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;-inkscape-font-specification:Droid Sans Bold"
+             y="159.88652"
+             x="258.15604"
+             height="54.212765"
+             width="115.52483"
+             id="rect7909" /></flowRegion><flowPara
+           id="flowPara7911">vertex</flowPara><flowPara
+           id="flowPara7913">attributes</flowPara></flowRoot>      <flowRoot
+         xml:space="preserve"
+         id="flowRoot10233"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         transform="matrix(0.66182359,0,0,0.66182359,652.86235,-2.7905858)"><flowRegion
+           id="flowRegion10235"><rect
+             id="rect10237"
+             width="115.52483"
+             height="54.212765"
+             x="258.15604"
+             y="159.88652"
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;-inkscape-font-specification:Droid Sans Bold" /></flowRegion><flowPara
+           id="flowPara10239">vertex</flowPara><flowPara
+           id="flowPara10241">attributes</flowPara></flowRoot>    </g>
+    <path
+       style="fill:#bbbbff;fill-opacity:1;stroke:#9999ff;stroke-width:0.96969718;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:9;stroke-opacity:1;stroke-dasharray:none"
+       d="m 265.96104,17.786446 -26.79258,-2.125473 c 6.8454,56.816783 13.73137,96.385017 120.74772,103.458597 l -3.20995,8.48904 24.78841,-9.73148 -20.20774,-16.59149 0.24306,9.66372 C 286.00243,108.43938 254.55205,76.656848 265.96104,17.786446 z"
+       id="path10534"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccccc"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140" />
+    <path
+       style="fill:#bbbbff;fill-opacity:1;stroke:#9999ff;stroke-width:0.96969718;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:9;stroke-opacity:1;stroke-dasharray:none"
+       d="m 265.81295,17.825548 -26.79608,-2.667032 c -4.33542,72.789372 -20.54674,101.595904 -43.5929,153.620914 l -7.66163,-4.86488 4.50196,26.24689 20.34499,-16.42291 -9.51219,-1.72187 c 28.06612,-44.26689 41.7233,-79.576301 62.71585,-154.191112 z"
+       id="path10536"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccccc"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140" />
+    <g
+       id="g10482"
+       transform="translate(-599.48236,36.923682)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140">
+      <g
+         id="g10430">
+        <flowRoot
+           xml:space="preserve"
+           id="flowRoot7889"
+           style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+           transform="matrix(0.66182359,0,0,0.66182359,652.86235,-2.7905858)"><flowRegion
+             id="flowRegion7891"><rect
+               id="rect7893"
+               width="107.78014"
+               height="33.560284"
+               x="242.02127"
+               y="33.390068"
+               style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;-inkscape-font-specification:Droid Sans Bold" /></flowRegion><flowPara
+             id="flowPara7895">uniforms</flowPara></flowRoot>        <flowRoot
+           transform="matrix(0.66182359,0,0,0.66182359,652.86235,-2.7905858)"
+           style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+           id="flowRoot10217"
+           xml:space="preserve"><flowRegion
+             id="flowRegion10219"><rect
+               style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;-inkscape-font-specification:Droid Sans Bold"
+               y="33.390068"
+               x="242.02127"
+               height="33.560284"
+               width="107.78014"
+               id="rect10221" /></flowRegion><flowPara
+             id="flowPara10223">uniforms</flowPara></flowRoot>      </g>
+    </g>
+    <path
+       style="fill:#bbbbff;fill-opacity:1;stroke:#9999ff;stroke-width:0.96969718;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:9;stroke-opacity:1;stroke-dasharray:none"
+       d="m 382.56106,134.39814 -0.67985,19.89752 c -50.03426,-2.90981 -108.40051,4.97419 -134.47037,27.77977 l 7.04162,5.72565 -26.32113,4.04544 9.13126,-24.5 4.64679,8.47666 c 30.16529,-23.76992 94.05974,-37.11785 140.65168,-41.42504 z"
+       id="path10538"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccccc"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140" />
+    <g
+       id="g10440"
+       transform="translate(-544.95641,90.328892)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140">
+      <flowRoot
+         transform="matrix(0.66182359,0,0,0.66182359,652.86235,-2.7905858)"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         id="flowRoot7897"
+         xml:space="preserve"><flowRegion
+           id="flowRegion7899"><rect
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;-inkscape-font-specification:Droid Sans Bold"
+             y="91.475174"
+             x="250.41135"
+             height="46.468086"
+             width="106.48936"
+             id="rect7901" /></flowRegion><flowPara
+           id="flowPara7903">varyings</flowPara></flowRoot>      <flowRoot
+         xml:space="preserve"
+         id="flowRoot10225"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         transform="matrix(0.66182359,0,0,0.66182359,652.86235,-2.7905858)"><flowRegion
+           id="flowRegion10227"><rect
+             id="rect10229"
+             width="106.48936"
+             height="46.468086"
+             x="250.41135"
+             y="91.475174"
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;-inkscape-font-specification:Droid Sans Bold" /></flowRegion><flowPara
+           id="flowPara10231">varyings</flowPara></flowRoot>    </g>
+    <path
+       sodipodi:nodetypes="cccccccc"
+       inkscape:connector-curvature="0"
+       id="path10540"
+       d="m 164.64919,240.48998 -26.79258,-2.12547 c 6.8454,56.81678 13.73137,96.38501 120.74772,103.45859 l -3.20995,8.48904 24.78841,-9.73148 -20.20774,-16.59149 0.24306,9.66372 C 184.69058,331.14291 153.2402,299.36038 164.64919,240.48998 z"
+       style="fill:#bbbbff;fill-opacity:1;stroke:#9999ff;stroke-width:0.96969718;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:9;stroke-opacity:1;stroke-dasharray:none"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140" />
+    <g
+       id="g10374"
+       transform="translate(-777.32484,-94.548015)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140">
+      <flowRoot
+         transform="matrix(0.68477999,0,0,0.68477999,702.561,69.556363)"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold"
+         id="flowRoot7947"
+         xml:space="preserve"><flowRegion
+           id="flowRegion7949"><rect
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold"
+             y="410.29788"
+             x="245.89362"
+             height="36.787235"
+             width="219.43263"
+             id="rect7951" /></flowRegion><flowPara
+           id="flowPara7953">gl_FragColor</flowPara></flowRoot>      <flowRoot
+         xml:space="preserve"
+         id="flowRoot10259"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold"
+         transform="matrix(0.68477999,0,0,0.68477999,702.561,69.556363)"><flowRegion
+           id="flowRegion10261"><rect
+             id="rect10263"
+             width="219.43263"
+             height="36.787235"
+             x="245.89362"
+             y="410.29788"
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold" /></flowRegion><flowPara
+           id="flowPara10265">gl_FragColor</flowPara></flowRoot>    </g>
+    <g
+       id="g10384"
+       transform="translate(-787.65108,-106.81043)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140">
+      <flowRoot
+         transform="matrix(0.68477999,0,0,0.68477999,702.561,69.556363)"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold"
+         id="flowRoot7955"
+         xml:space="preserve"><flowRegion
+           id="flowRegion7957"><rect
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold"
+             y="453.539"
+             x="263.31915"
+             height="31.624113"
+             width="216.20567"
+             id="rect7959" /></flowRegion><flowPara
+           id="flowPara7961">gl_FragData</flowPara></flowRoot>      <flowRoot
+         xml:space="preserve"
+         id="flowRoot10267"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold"
+         transform="matrix(0.68477999,0,0,0.68477999,702.561,69.556363)"><flowRegion
+           id="flowRegion10269"><rect
+             id="rect10271"
+             width="216.20567"
+             height="31.624113"
+             x="263.31915"
+             y="453.539"
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold" /></flowRegion><flowPara
+           id="flowPara10273">gl_FragData</flowPara></flowRoot>    </g>
+    <path
+       sodipodi:nodetypes="cccccccc"
+       inkscape:connector-curvature="0"
+       id="path10542"
+       d="m 404.07397,155.28626 26.87761,-0.0112 c -31.6391,70.21272 -98.42594,145.10494 -189.46163,88.40363 l -2.34669,8.76702 -14.45223,-22.36739 26.09214,-1.68243 -5.83633,7.70609 c 62.80064,42.03318 142.93958,-4.67259 159.12713,-80.81574 z"
+       style="fill:#bbbbff;fill-opacity:1;stroke:#9999ff;stroke-width:0.96969718;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:9;stroke-opacity:1;stroke-dasharray:none"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140" />
+    <g
+       id="g10364"
+       transform="translate(-631.19149,-67.765958)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140">
+      <flowRoot
+         transform="matrix(0.68477999,0,0,0.68477999,702.561,69.556363)"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold"
+         id="flowRoot7939"
+         xml:space="preserve"><flowRegion
+           id="flowRegion7941"><rect
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold"
+             y="354.14893"
+             x="240.7305"
+             height="43.241135"
+             width="185.22694"
+             id="rect7943" /></flowRegion><flowPara
+           id="flowPara7945">gl_FragCoord</flowPara></flowRoot>      <flowRoot
+         xml:space="preserve"
+         id="flowRoot10251"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold"
+         transform="matrix(0.68477999,0,0,0.68477999,702.561,69.556363)"><flowRegion
+           id="flowRegion10253"><rect
+             id="rect10255"
+             width="185.22694"
+             height="43.241135"
+             x="240.7305"
+             y="354.14893"
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold" /></flowRegion><flowPara
+           id="flowPara10257">gl_FragCoord</flowPara></flowRoot>    </g>
+    <g
+       id="g10462"
+       transform="translate(-532.10771,-286.40773)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140">
+      <flowRoot
+         transform="matrix(0.66182359,0,0,0.66182359,578.9771,238.52776)"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         id="flowRoot7973"
+         xml:space="preserve"><flowRegion
+           id="flowRegion7975"><rect
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;-inkscape-font-specification:Droid Sans Bold"
+             y="186.9929"
+             x="185.87234"
+             height="89.063828"
+             width="240.08511"
+             id="rect7977" /></flowRegion><flowPara
+           id="flowPara7979">texture data</flowPara></flowRoot>      <flowRoot
+         xml:space="preserve"
+         id="flowRoot10285"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         transform="matrix(0.66182359,0,0,0.66182359,578.9771,238.52776)"><flowRegion
+           id="flowRegion10287"><rect
+             id="rect10289"
+             width="240.08511"
+             height="89.063828"
+             x="185.87234"
+             y="186.9929"
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;-inkscape-font-specification:Droid Sans Bold" /></flowRegion><flowPara
+           id="flowPara10291">texture data</flowPara></flowRoot>    </g>
+    <g
+       id="g10472"
+       transform="translate(-403.4657,-337.87121)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140">
+      <flowRoot
+         transform="matrix(0.66182359,0,0,0.66182359,578.9771,238.52776)"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         id="flowRoot7981"
+         xml:space="preserve"><flowRegion
+           id="flowRegion7983"><rect
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;-inkscape-font-specification:Droid Sans Bold"
+             y="241.20567"
+             x="224.59575"
+             height="59.375885"
+             width="203.94327"
+             id="rect7985" /></flowRegion><flowPara
+           id="flowPara7987">buffer (VBO) data</flowPara></flowRoot>      <flowRoot
+         xml:space="preserve"
+         id="flowRoot10293"
+         style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+         transform="matrix(0.66182359,0,0,0.66182359,578.9771,238.52776)"><flowRegion
+           id="flowRegion10295"><rect
+             id="rect10297"
+             width="203.94327"
+             height="59.375885"
+             x="224.59575"
+             y="241.20567"
+             style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;-inkscape-font-specification:Droid Sans Bold" /></flowRegion><flowPara
+           id="flowPara10299">buffer (VBO) data</flowPara></flowRoot>    </g>
+    <path
+       sodipodi:nodetypes="cccccccc"
+       inkscape:connector-curvature="0"
+       id="path10544"
+       d="m 430.62817,155.13558 -26.25871,-0.39739 c 11.65314,57.67752 7.06644,93.9835 -11.0263,125.75607 l -6.59017,-6.23996 -0.59921,26.62345 23.10956,-12.23022 -9.00752,-3.50873 c 20.34348,-32.76394 28.49047,-73.20616 30.37235,-130.00322 z"
+       style="fill:#bbbbff;fill-opacity:1;stroke:#9999ff;stroke-width:0.96969718;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:9;stroke-opacity:1;stroke-dasharray:none"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140" />
+    <g
+       id="g10335"
+       transform="translate(-499.23888,-70.739014)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140">
+      <text
+         sodipodi:linespacing="100%"
+         id="text7923"
+         y="257.26865"
+         x="916.90686"
+         style="font-size:15.0651598px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:2.73912001;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold"
+         xml:space="preserve"><tspan
+           style="stroke-width:2.73912001"
+           y="257.26865"
+           x="916.90686"
+           id="tspan7925"
+           sodipodi:role="line">gl_Position</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-size:15.0651598px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold"
+         x="916.90686"
+         y="257.26865"
+         id="text10243"
+         sodipodi:linespacing="100%"><tspan
+           sodipodi:role="line"
+           id="tspan10245"
+           x="916.90686"
+           y="257.26865">gl_Position</tspan></text>
+    </g>
+    <g
+       id="g10357"
+       transform="translate(-554.09704,-230.79576)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140">
+      <g
+         transform="translate(47.44567,142.06968)"
+         id="g10341">
+        <text
+           xml:space="preserve"
+           style="font-size:15.0651598px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:2.73912001;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+           x="923.97809"
+           y="294.39246"
+           id="text7935"
+           sodipodi:linespacing="100%"><tspan
+             sodipodi:role="line"
+             id="tspan7937"
+             x="923.97809"
+             y="294.39246"
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:2.73912001;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold">gl_PointCoord</tspan></text>
+        <text
+           sodipodi:linespacing="100%"
+           id="text10247"
+           y="294.39246"
+           x="923.97809"
+           style="font-size:15.0651598px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+           xml:space="preserve"><tspan
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans Mono;-inkscape-font-specification:Droid Sans Bold"
+             y="294.39246"
+             x="923.97809"
+             id="tspan10249"
+             sodipodi:role="line">gl_PointCoord</tspan></text>
+      </g>
+    </g>
+    <path
+       style="fill:#bbbbff;fill-opacity:1;stroke:#9999ff;stroke-width:0.96969718;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:9;stroke-opacity:1;stroke-dasharray:none"
+       d="m 218.83447,34.941177 5.19502,-26.6047002 -24.62153,8.7117902 7.8112,4.43309 -67.44881,84.072873 -5.62894,-6.997447 -3.16694,26.441197 24.18244,-9.94182 -8.62666,-4.36202 67.03382,-84.490413 z"
+       id="path10556"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccccccc"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140" />
+    <g
+       id="g10493"
+       transform="translate(-564.55848,36.018354)"
+       inkscape:export-filename="/home/christopher/projects/glprog/lessons/img/flow-diagram-complete.png"
+       inkscape:export-xdpi="140"
+       inkscape:export-ydpi="140">
+      <g
+         id="g10418">
+        <flowRoot
+           transform="matrix(0.66182359,0,0,0.66182359,654.67453,-63.800567)"
+           style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+           id="flowRoot10165"
+           xml:space="preserve"><flowRegion
+             id="flowRegion10167"><rect
+               style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;-inkscape-font-specification:Droid Sans Bold"
+               y="115.35461"
+               x="64.539009"
+               height="65.829788"
+               width="110.3617"
+               id="rect10169" /></flowRegion><flowPara
+             id="flowPara10181">set state</flowPara><flowPara
+             id="flowPara10185">get state</flowPara></flowRoot>        <flowRoot
+           xml:space="preserve"
+           id="flowRoot10301"
+           style="font-size:22px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold"
+           transform="matrix(0.66182359,0,0,0.66182359,654.67453,-63.800567)"><flowRegion
+             id="flowRegion10303"><rect
+               id="rect10305"
+               width="110.3617"
+               height="65.829788"
+               x="64.539009"
+               y="115.35461"
+               style="font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;-inkscape-font-specification:Droid Sans Bold" /></flowRegion><flowPara
+             id="flowPara10307">set state</flowPara><flowPara
+             id="flowPara10309">get state</flowPara></flowRoot>      </g>
+    </g>
+  </g>
+</svg>
