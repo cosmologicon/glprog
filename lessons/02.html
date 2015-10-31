@@ -9,6 +9,7 @@ gl.canvas.width = 854
 gl.canvas.height = 480
 gl.viewport(0, 0, 854, 480)
 
+// Create a program object
 var prog = gl.createProgram()
 
 // Output: true
@@ -20,7 +21,7 @@ console.log("Program info log:", gl.getProgramInfoLog(prog))
 var vshader = gl.createShader(gl.VERTEX_SHADER)
 // Output: true
 console.log("Is this a shader object:", gl.isShader(vshader))
-// Output: a Number equal to gl.VERTEX_SHADER
+// Output: a GLenum equal to gl.VERTEX_SHADER
 console.log("Shader type (should equal %d): %d", gl.VERTEX_SHADER, gl.getShaderParameter(vshader, gl.SHADER_TYPE))
 // Set the source code for the shader
 gl.shaderSource(vshader, "void main() { gl_Position = vec4(0.0); }")
