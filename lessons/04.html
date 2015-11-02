@@ -18,7 +18,8 @@ values of 100%, 75%, 50%, and 25%. The settings for the columns are, from left t
 // Vertex shader source
 
 // Viewport coordinates of point, in range (0, 0, 0) to (854, 480, 1000).
-// viewpos.z will determine the point's depth, with 0 closest and 1000 farthest.
+// This range will be mapped to the clip space cube (-1, -1, -1) to (1, 1, 1).
+// z-coordinate of viewpos is 0 for the closest visible points, and 1000 for the farthest.
 uniform highp vec3 viewpos;
 // Size of the viewport in pixels
 uniform highp vec3 viewportsize;
