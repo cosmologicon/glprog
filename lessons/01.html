@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <body>
-<p>Create a 854x480 canvas filled blue, with two 200x200 boxes colored red and yellow.
+<p>A fake game of Pong. There is a 854x480 canvas filled with dark green. Three rectangles are drawn
+onto the canvas. A 20x20 white rectangle for the ball, and two 20x100 red and blue rectangles for
+the paddles.
 <script>
 
 // SET UP THE CANVAS AND THE GL CONTEXT
@@ -29,20 +31,20 @@ gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
 console.log("Viewport size:", gl.getParameter(gl.VIEWPORT))
 
 
-// COLOR THE ENTIRE CANVAS BLUE
+// COLOR THE ENTIRE CANVAS DARK GREEN
 
-// Set the clear color to blue (0, 0, 0.5)
+// Set the clear color to dark green (0, 0.3, 0)
 // The last number (1) is the alpha value. 1 = completely opaque.
-gl.clearColor(0, 0, 0.5, 1)
+gl.clearColor(0, 0.3, 0, 1)
 
-// Output: [0, 0, 0.5, 1]
+// Output: [0, 0.3, 0, 1]
 console.log("Clear color:", gl.getParameter(gl.COLOR_CLEAR_VALUE))
 
 // Clear the canvas (set every pixel to the clear color)
 gl.clear(gl.COLOR_BUFFER_BIT)
 
 
-// COLOR A BOX RED
+// ENABLING AND DISABLING THE SCISSOR TEST
 
 // Output: false
 console.log("Scissor test enabled:", gl.getParameter(gl.SCISSOR_TEST))
@@ -60,20 +62,58 @@ gl.scissor(160, 10, 200, 200)
 // Output: [160, 10, 200, 200]
 console.log("Scissor box:", gl.getParameter(gl.SCISSOR_BOX))
 
-// Clear the scissor area to red.
-gl.clearColor(0.5, 0, 0, 1)
-gl.clear(gl.COLOR_BUFFER_BIT)
-
-
-// NOW FOR A YELLOW BOX
-
-// (260, 110) is 100 pixels up and to the right from (160, 10).
-gl.scissor(260, 110, 200, 200)
-gl.clearColor(0.5, 0.5, 0, 1)
-gl.clear(gl.COLOR_BUFFER_BIT)
-
 // Disable scissor testing - any subsequent draws can access the entire viewport.
 gl.disable(gl.SCISSOR_TEST)
+
+// EXAMPLE: FAKE PONG
+
+// position and velocity of the ball
+var ballx = 100, bally = 100
+var ballvx = 12, ballvy = 10
+function update() {
+	// Update the ball's position
+	ballx += ballvx
+	bally += ballvy
+	// Bounce off the walls if it goes out of bounds
+	if (ballx < 60 && ballvx < 0) ballvx = -ballvx
+	if (ballx > 774 && ballvx > 0) ballvx = -ballvx
+	if (bally < 0 && ballvy < 0) ballvy = -ballvy
+	if (bally > 460 && ballvy > 0) ballvy = -ballvy
+
+	// Choose the paddle positions. You don't need to understand this formula. It's just a trick to
+	// make it look like the paddles are moving randomly but still meeting up with the ball when it
+	// reaches them.
+	var t = Date.now() * 0.001
+	// Random-ish positions
+	var yred = 190 + 100 * Math.sin(t * 12.3) + 100 * Math.sin(t * 4.56)
+	var yblue = 190 + 100 * Math.sin(t * 9.87) + 100 * Math.sin(t * 7.65)
+	// Adjust positions to match up with the ball.
+	var f = (ballx - 60) / 714  // f = 0 on the left, f = 1 on the right
+	yred = f * yred + (1 - f) * (bally - 40)
+	yblue = (1 - f) * yblue + f * (bally - 40)
+
+	// Clear the entire canvas to dark green
+	gl.clearColor(0, 0.3, 0, 1)
+	gl.clear(gl.COLOR_BUFFER_BIT)
+
+	// Draw the three rectangles by clearing the canvas with the scissor test enabled.
+	// Note: this is not the normal way to draw rectangles. Just for educational purposes.
+	gl.enable(gl.SCISSOR_TEST)
+	// Put a white rectangle at the ball's position
+	gl.scissor(ballx, bally, 20, 20)
+	gl.clearColor(1, 1, 1, 1)
+	gl.clear(gl.COLOR_BUFFER_BIT)
+	// Draw a red paddle on the left
+	gl.scissor(40, yred, 20, 100)
+	gl.clearColor(1, 0.5, 0.5, 1)
+	gl.clear(gl.COLOR_BUFFER_BIT)
+	// Draw a blue paddle on the right
+	gl.scissor(794, yblue, 20, 100)
+	gl.clearColor(0.5, 0.5, 1, 1)
+	gl.clear(gl.COLOR_BUFFER_BIT)
+	gl.disable(gl.SCISSOR_TEST)
+}
+window.setInterval(update, 1000 / 60)
 
 </script>
 
