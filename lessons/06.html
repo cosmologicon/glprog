@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <body>
-<p>A 5x5x5 rotating cube of points with various colors and positions. The points are circular with
-lightining from the top left.
+<p>A 5x5x5 rotating cube of circular points with various colors and positions.
 <script type="x-shader/x-vertex" id="vsource">
 // Rotation angle about the vertical axis in degrees
 uniform float rotation;
@@ -17,9 +16,8 @@ mat2 R(float theta) {
 	return mat2(C, S, -S, C);
 }
 
-// The amount to tilt toward the viwer in degrees, and the corresponding rotation matrix.
+// The amount to tilt toward the viwer in degrees.
 const float tilt = 20.0;
-mat2 tiltmatrix = R(tilt);
 
 // Viewport size in pixels.
 const vec3 viewportsize = vec3(854.0, 480.0, 854.0);
@@ -32,7 +30,7 @@ void main() {
 	// Rotate around the y (vertical) axis.
 	gamepos.xz *= R(rotation);
 	// Rotate around the x (horizontal) axis toward the viewer.
-	gamepos.yz *= tiltmatrix;
+	gamepos.yz *= R(tilt);
 	// Transform into view coordinates (pixels going from (0, 0, 0) to (854, 480, 480)).
 	float gamescale = viewportsize.y / 4.2;  // Pixels per game unit.
 	vec3 viewpos = viewportsize * 0.5 + gamepos * gamescale;
@@ -58,7 +56,7 @@ void main() {
 	vec2 p;
 	p.x = gl_PointCoord.x * 2.0 - 1.0;
 	p.y = 1.0 - gl_PointCoord.y * 2.0;
-//	if (length(p) > 1.0) discard;  // Fragment is outside the unit circle.
+	if (length(p) > 1.0) discard;  // Fragment is outside the unit circle.
 	gl_FragColor = vec4(color, 1.0);
 	if (length(p) > 1.0) gl_FragColor.a = 0.0;
 }

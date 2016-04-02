@@ -18,9 +18,8 @@ mat2 R(float theta) {
 	return mat2(C, S, -S, C);
 }
 
-// The amount to tilt toward the viwer in degrees, and the corresponding rotation matrix.
+// The amount to tilt toward the viwer in degrees.
 const float tilt = 20.0;
-mat2 tiltmatrix = R(tilt);
 
 // Viewport size in pixels.
 const vec3 viewportsize = vec3(854.0, 480.0, 854.0);
@@ -33,7 +32,7 @@ void main() {
 	// Rotate around the y (vertical) axis.
 	gamepos.xz *= R(rotation);
 	// Rotate around the x (horizontal) axis toward the viewer.
-	gamepos.yz *= tiltmatrix;
+	gamepos.yz *= R(tilt);
 	// Transform into view coordinates (pixels going from (0, 0, 0) to (854, 480, 480)).
 	float gamescale = viewportsize.y / 4.2;  // Pixels per game unit.
 	vec3 viewpos = viewportsize * 0.5 + gamepos * gamescale;
