@@ -112,6 +112,10 @@ gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imgcontext.c
 // Generate mipmaps for the texture.
 gl.generateMipmap(gl.TEXTURE_2D)
 
+	imgcontext.fillStyle = "blue"
+	imgcontext.fillRect(0, 0, 64, 64)
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imgcontext.canvas)
+
 
 // Get the min filter setting (defaults to gl.NEAREST_MIPMAP_LINEAR)
 console.log("Min filter setting (should be %d): %d", gl.NEAREST_MIPMAP_LINEAR,
