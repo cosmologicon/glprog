@@ -32,14 +32,14 @@ math, and who don't know OpenGL. If this is not what you're looking for, there m
 better for you.
 
 * These lessons assume you don't know OpenGL. If you already know OpenGL, you can probably learn
-WebGL faster from a general WebGL tutorial.
+WebGL faster from a general WebGL tutorial. (TODO: add recommendation here.)
 * Similarly, if you plan to learn other kinds of OpenGL besides WebGL some day, it might be easier
 to learn OpenGL first. There are many resources for learning OpenGL. Try to find a modern one, as
 older ones (such as NeHe) used very different techniques.
 * These lessons assume you want to get down to the fundamentals. If you're okay with using a
 high-level library to abstract away the details of WebGL, there are good options you should use
 instead, such as [Three.js](http://threejs.org/). Unity will also export to WebGL without you
-needing to write it yourself.
+needing to write it yourself (TODO: check that this is true).
 * If you're from the future, there's probably something better. These lessons cover WebGL 1.0, which
 is widely supported as of October 2015, and which nothing has replaced. If you're from 2017 or
 later, I expect WebGL 2.0 or something else to be widely supported, so you should go learn that.
@@ -57,9 +57,14 @@ an online course. I've heard good things about Khan Academy.
 Also, I don't use semicolons in my JavaScript, and I'm not going to add them just to make you feel
 better. Sorry. If that's a dealbreaker for you, I understand.
 
+I'm introducing concepts in an unusual order. Some might say it's the *wrong* order, because it's so
+unusual, but I disagree. I think my order is perfectly fine. It means that if you get halfway
+through these lessons, and halfway through some other tutorial, you'll see different concepts, which
+I think is probably a good thing.
+
 After I started these lessons, I found [WebGL Fundamentals](http://webglfundamentals.org), which is
-also great and I recommend it. Those lessons introduce the concepts in a different order and with
-different levels of detail than what I'm doing, so you can probably use them both.
+also great and I recommend it. Aside from using a different order, those lessons go into different
+levels of detail. In particular, I assume you know way more math than those lessons do.
 
 ## How to use the lessons
 
@@ -77,15 +82,16 @@ you can see any errors, and see anything that's output to the console. `console.
 throughout the lesson, to demonstrate the simple getter functions. Make sure the console matches
 what the lesson says it should say.
 
-Also open the README for that lesson. Neither the README nor the html file by itself is enough: you
-need to go back and forth between them, seeing where the concepts from the README are used in the
-html file. You should aim to understand all the lines in the html.
+Also open the README (the `.md` file) for that lesson. Neither the README nor the html file by
+itself is enough: you need to go back and forth between them, seeing where the concepts from the
+README are used in the html file. You should aim to understand all the lines in the html.
 
-Finally, there are some exercises at the end of the README. Doing these is probably the best thing
-you can do to make sure you understand the material. To do the exercises, edit the html file in your
-text editor, and reload the page in your browser to check that you did the exercise right. You can
-skip exercises, and do the exercises in any order. They assume you're starting from the original
-html file. You may need to undo your changes from exercise 1 before you can do exercise 2.
+Finally, there are some exercises at the end of the README, which tell you to make certain changes
+to the html file. Doing these is probably the best thing you can do to make sure you understand the
+material. To do the exercises, edit the html file in your text editor, and reload the page in your
+browser to check that you did the exercise right. You can skip exercises, and do the exercises in
+any order. Each exercise assumes you're starting from the original html file, so you may need to
+undo your changes from exercise 1 before you can do exercise 2.
 
 I'm not relying on any helper libraries, although these are very common with WebGL. I want to make
 sure you see exactly what the calls look like at the basic level, without "locking you in" to using
