@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <body>
-<p>Draw three points on the canvas: 10px green on the positive x axis, 10px red at the center, and
-20px yellow on the positive y axis.
+<p>2048-style game. Use the arrow keys to slide tiles. There is a 4x4 grid of brown cells. Tiles
+appear as squares of various colors and sizes within the spaces.
 <p><canvas id=canvas></canvas>
 <script type="x-shader/x-vertex" id="vsource">
 uniform mediump float size;
@@ -47,9 +47,9 @@ function buildProgramFromScripts(vscriptname, fscriptname) {
 
 // Set up the gl context and clear it to opaque black.
 var gl = document.getElementById("canvas").getContext("webgl")
-gl.canvas.width = 854
+gl.canvas.width = 480
 gl.canvas.height = 480
-gl.viewport(0, 0, 854, 480)
+gl.viewport(0, 0, 480, 480)
 gl.clearColor(0, 0, 0, 1)
 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -68,27 +68,197 @@ var pos = gl.getUniformLocation(prog, "pos")
 var size = gl.getUniformLocation(prog, "size")
 var color = gl.getUniformLocation(prog, "color")
 
-// A 10px green point along the positive x axis (0.5, 0)
-gl.uniform2f(pos, 0.5, 0)
-// Output: [0.5, 0]
-console.log("Value of uniform pos:", gl.getUniform(prog, pos))
-gl.uniform1f(size, 10)
-gl.uniform3f(color, 0, 1, 0)
-// Draw a single point with the specified uniforms.
-gl.drawArrays(gl.POINTS, 0, 1)
 
-// A 10px red point at the center (0, 0).
-// We don't need to update size if it's the same as before.
-gl.uniform2f(pos, 0, 0)
-gl.uniform3f(color, 1, 0, 0)
-gl.drawArrays(gl.POINTS, 0, 1)
+// EXAMPLE - 2048-style game
 
-// A 20px yellow point along the positive y axis (0, 0.5)
-// The vector (v) forms of the update functions takes an Array.
-gl.uniform2fv(pos, [0, 0.5])
-gl.uniform1fv(size, [20])
-gl.uniform3fv(color, [1, 1, 0])
-gl.drawArrays(gl.POINTS, 0, 1)
+// Set up the game state. The game board is a 4x4 grid of cells, referred to by their index 0
+// though 15. The cells are laid out like this from bottom to top and left to right:
+
+//  12 13 14 15
+//   8  9 10 11
+//   4  5  6  7
+//   0  1  2  3
+
+// grid[i] is the tile in cell with index i, or null if it's empty.
+var grid = []
+while (grid.length < 16) grid.push(null)
+// A separate list of tiles.
+// tile.n is the level of the tile. It starts at 0 and increases by 1 with every merge.
+// tile.cell is the index of the cell the tile currently occupies.
+// Tiles may still appear in this list for a brief transition period after they've merged with
+// another tile (and thus are removed from the grid), to show the animation of them sliding into
+// place.
+var tiles = []
+
+// Game settings (sizes and colors)
+
+// [cellxs[i], cellys[i]] is the center of the ith cell in clip space coordinates.
+// Clip space goes from -1 to 1, so we place the rows at (-0.72, -0.24, 0.24, 0.72) to space them
+// equally over this interval.
+var cellxs = [], cellys = [], centers = [-0.72, -0.24, 0.24, 0.72]
+centers.forEach(function (y) {
+	centers.forEach(function (x) {
+		cellxs.push(x)
+		cellys.push(y)
+	})
+})
+// tilesizes[tile.n] is the size of the given tile's square in pixels.
+var tilesizes = [30, 34, 38, 42, 46, 50, 54, 58, 62, 66, 70, 74, 78, 82, 86, 90]
+// tilecolors[tile.n] is the color of the given tile's square.
+var tilecolors = [
+	[0.5, 0, 0],  // dark red
+	[1, 1, 0],   // yellow
+	[0, 0, 1],   // blue
+	[1, 1, 1],   // white
+	[1, 0.8, 0],   // orange yellow
+	[0, 0.6, 1],   // blue green
+	[1, 0.5, 0.9],   // bright purple
+	[1, 0.5, 0],   // orange
+	[0, 1, 0.6],   // green blue
+	[1, 0, 0.6],   // purple
+	[1, 0.2, 0],   // red orange
+	[0, 1, 0],   // green
+	[0.6, 0, 0.8],   // purple blue
+	[1, 0, 0],   // red
+	[0.5, 1, 0],   // yellow green
+	[0.3, 0, 1],   // blue purple
+]
+
+// Add a tile to a random empty square.
+function addrandomtile() {
+	// indices of empty cells
+	var freecells = grid.map((x, i) => [x, i]).filter(p => !p[0]).map(p => p[1])
+	// select a random empty cell
+	if (!freecells.length) return
+	var j = freecells[Math.floor(Math.random() * freecells.length)]
+	// fill it with a new tile
+	grid[j] = {
+		cell: j,
+		n: Math.floor(Math.random() * 1.4),  // Random choice between n = 0 and n = 1
+		oldcell: -1,  // oldcell = -1 indicates it comes from off the grid
+		oldn: 0,
+	}
+	tiles.push(grid[j])
+}
+addrandomtile()
+// Transition timer that counts down from 10. For 10 frames after maknig a move, the tiles are
+// drawn in a "transition" state, either sliding or growing into place. When the transition timer
+// gets down to 0, the transition is complete and the tiles are shown in their actual place.
+var transition = 10
+function update() {
+	// Set the background to brown
+	gl.clearColor(0.5, 0.25, 0, 1)
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	// Draw the 16 dark brown grid squares
+	// We only need to set the "size" and "color" uniforms once, since they have the same value
+	// for all of the cells.
+	gl.uniform3f(color, 0.25, 0.125, 0)
+	// You can use vector setters like 1fv for non-vector uniforms as well. It's not common, but
+	// it's perfectly valid.
+	gl.uniform1fv(size, [96])
+	for (var i = 0 ; i < 16 ; ++i) {
+		gl.uniform2f(pos, cellxs[i], cellys[i])
+		gl.drawArrays(gl.POINTS, 0, 1)
+	}
+
+	if (transition == 0) {
+		// If transition is not active, remove any tiles that aren't actually on the grid.
+		tiles = grid.filter(x => x)
+		tiles.forEach(function (tile, i) {
+			if (!tile) return
+			// Draw the tile in its current position
+			gl.uniform2f(pos, cellxs[tile.cell], cellys[tile.cell])
+			gl.uniform1f(size, tilesizes[tile.n])
+			gl.uniform3fv(color, tilecolors[tile.n])
+			gl.drawArrays(gl.POINTS, 0, 1)
+		})
+	} else {
+		// f = 0 at beginning of transition, f = 1 at end of transition
+		var f = 1 - transition / 10
+		--transition
+		tiles.forEach(function (tile, i) {
+			if (!tile) return
+			if (tile.oldcell == -1) {
+				// Tile is appearing for the first time - have it grow from 0 to full size
+				gl.uniform2f(pos, cellxs[tile.cell], cellys[tile.cell])
+				gl.uniform1f(size, tilesizes[tile.oldn] * f)
+			} else {
+				// Tile is sliding. Have it appear in a position between its last position and its
+				// current position.
+				var x = (1 - f) * cellxs[tile.oldcell] + f * cellxs[tile.cell]
+				var y = (1 - f) * cellys[tile.oldcell] + f * cellys[tile.cell]
+				gl.uniform2f(pos, x, y)
+				gl.uniform1f(size, tilesizes[tile.oldn])
+			}
+			// Use the tile's old color and size, so that tiles that are in the process of merging
+			// don't appear as already merged.
+			gl.uniform3fv(color, tilecolors[tile.oldn])
+			gl.drawArrays(gl.POINTS, 0, 1)
+		})
+	}
+}
+setInterval(update, 1000 / 60)
+
+
+function slide(rows) {
+	// Maintain copy of old grid
+	var oldgrid = grid.slice()
+	tiles.forEach(function (tile) {
+		tile.oldn = tile.n
+		tile.oldcell = tile.cell
+	})
+	// Perform the tile slides (this step updates the game state)
+	rows.forEach(sliderow)
+	// If the grid has been updated, start a transition and add a random tile
+	if (!grid.every((x, i) => x === oldgrid[i])) {
+		transition = 10
+		addrandomtile()
+	}
+}
+// Given a row consisting of 4 cell indices, slide all the tiles in the given row toward row[0],
+// merging as necessary.
+function sliderow(row) {
+	// row[j] is the "target", the next cell index where a tile could possibly go
+	var j = 0
+	row.forEach(function (i) {
+		var tile = grid[i]
+		// No tile in this grid cell
+		if (!tile) return
+		// Temporarily remove the tile from the grid. It will be placed back in its new position,
+		// unless it gets merged away.
+		grid[i] = null
+		// ctile is the tile that currently resides in cell row[j], if any
+		var ctile = grid[row[j]]
+		// Cell row[j] is empty. Move this tile there.
+		if (!ctile) {
+			grid[row[j]] = tile
+			tile.cell = row[j]
+		// Cell row[j] is occupied by a tile that this tile can't merge with.
+		// Move this tile to cell row[j+1] and increment j.
+		} else if (ctile.n != tile.n) {
+			grid[row[++j]] = tile
+			tile.cell = row[j]
+		// Cell row[j] is occupied by a tile this one can merge with.
+		// Merge into cell row[j] (which increments n) and increment j.
+		} else {
+			grid[row[j]].n++
+			tile.cell = row[j++]
+			// Tile is not added back to grid. It will be removed after the next transition.
+		}
+	})
+}
+document.addEventListener("keydown", function (event) {
+	switch (event.keyCode) {
+		case 37:  // left
+			slide([[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]]) ; break
+		case 38:  // up
+			slide([[12, 8, 4, 0], [13, 9, 5, 1], [14, 10, 6, 2], [15, 11, 7, 3]]) ; break
+		case 39:  // right
+			slide([[3, 2, 1, 0], [7, 6, 5, 4], [11, 10, 9, 8], [15, 14, 13, 12]]) ; break
+		case 40:  // down
+			slide([[0, 4, 8, 12], [1, 5, 9, 13], [2, 6, 10, 14], [3, 7, 11, 15]]) ; break
+	}
+}, true)
 
 </script>
 
