@@ -131,12 +131,14 @@ function addrandomtile() {
 	// select a random empty cell
 	if (!freecells.length) return
 	var j = freecells[Math.floor(Math.random() * freecells.length)]
+	// Random choice between n = 0 and n = 1
+	var n = Math.floor(Math.random() * 1.4)
 	// fill it with a new tile
 	grid[j] = {
 		cell: j,
-		n: Math.floor(Math.random() * 1.4),  // Random choice between n = 0 and n = 1
+		n: n,
 		oldcell: -1,  // oldcell = -1 indicates it comes from off the grid
-		oldn: 0,
+		oldn: n,
 	}
 	tiles.push(grid[j])
 }

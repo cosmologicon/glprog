@@ -56,10 +56,9 @@ gl.enable(gl.SCISSOR_TEST)
 // Output: true
 console.log("Scissor test enabled:", gl.getParameter(gl.SCISSOR_TEST))
 
-// Restrict the draw region to a 200x200 box with lower-left corner at (160, 10),
-// near the bottom.
-gl.scissor(160, 10, 200, 200)
-// Output: [160, 10, 200, 200]
+// Restrict the draw region to a 200x200 box with lower-left corner at (10, 10).
+gl.scissor(10, 10, 200, 200)
+// Output: [10, 10, 200, 200]
 console.log("Scissor box:", gl.getParameter(gl.SCISSOR_BOX))
 
 // Disable scissor testing - any subsequent draws can access the entire viewport.

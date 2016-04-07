@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <body>
-<p>Build a trivial GL program. Nothing will appear on the viewport.
-<canvas id=canvas>
+<p>Building WebGL programs. The canvas is a blue square. There are 100 yellow squares arrayed in a
+spirally shape.
+<p><canvas id=canvas>
 <script>
 // Set up the gl context
 var gl = document.getElementById("canvas").getContext("webgl")
-gl.canvas.width = 854
+gl.canvas.width = 480
 gl.canvas.height = 480
-gl.viewport(0, 0, 854, 480)
+gl.viewport(0, 0, 480, 480)
 
 // Create a program object
 var prog = gl.createProgram()
@@ -82,6 +83,65 @@ gl.useProgram(prog)
 gl.deleteProgram(prog)
 // Output: true
 console.log("Program delete status:", gl.getProgramParameter(prog, gl.DELETE_STATUS))
+
+
+// EXAMPLE: DRAWING 100 POINTS
+
+// This example creates 100 different program objects, each of which draws a yellow square on the
+// canvas at a certain position. This is probably the worst possible way to draw 100 points. It's
+// strictly for illustration purposes.
+
+// 100 different vshader objects.
+var vshaders = []
+for (var a = 0 ; a < 100 ; ++a) {
+	// This is the formula for phyllotaxis (e.g. sunflower seed arrangement)
+	var r = Math.sqrt(a / 100)
+	var theta = 3.883222 * a  // 3.883222 = golden ratio * tau
+	var x = r * Math.cos(theta), y = r * Math.sin(theta)
+	// The size of the point is 20 for a = 0 and decreases with increasing a.
+	var s = 20 * (1 - a / 150)
+	// The source code for the vertex shader. It sets the position to (x, y) in clipspace
+	// coordinates, which will be covered in Lesson 03, and it sets the size to s pixels.
+	// The details of this program will be covered in Lesson 03.
+	var vsource = "void main() { gl_Position = vec4(" + x.toFixed(4) + ", " + y.toFixed(4) + ", 0.0, 1.0); gl_PointSize = " + s.toFixed(4) + "; }"
+	// Create the shader object and push it onto the vshaders array.
+	vshaders[a] = gl.createShader(gl.VERTEX_SHADER)
+	gl.shaderSource(vshaders[a], vsource)
+	gl.compileShader(vshaders[a])
+	if (!gl.getShaderParameter(vshader, gl.COMPILE_STATUS)) {
+		throw "Error compiling vertex shader:\n" + gl.getShaderInfoLog(vshader)
+	}
+}
+
+// The fragment shader that will be used for all the programs. Sets pixels to yellow.
+var fshader = gl.createShader(gl.FRAGMENT_SHADER)
+gl.shaderSource(fshader, "void main() { gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }")
+gl.compileShader(fshader)
+if (!gl.getShaderParameter(fshader, gl.COMPILE_STATUS)) {
+	throw "Error compiling fragment shader:\n" + gl.getShaderInfoLog(fshader)
+}
+
+// Create the 100 different program objects, each of which uses a different vertex shader.
+var progs = vshaders.map(function (vshader) {
+	var prog = gl.createProgram()
+	gl.attachShader(prog, vshader)
+	gl.attachShader(prog, fshader)
+	gl.linkProgram(prog)
+	if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+		throw "Error linking program:\n" + gl.getProgramInfoLog(prog)
+	}
+	return prog
+})
+
+// Clear the canvas to dark blue
+gl.clearColor(0, 0, 0.3, 1)
+gl.clear(gl.COLOR_BUFFER_BIT)
+
+// Use and run each of the 100 programs
+progs.forEach(function (prog) {
+	gl.useProgram(prog)
+	gl.drawArrays(gl.POINTS, 0, 1)
+})
 
 </script>
 
