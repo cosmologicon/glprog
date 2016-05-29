@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<script src="http://ufx.space/UFX.js"></script>
+<script src="../../UFXgl.js"></script>
+<canvas id=canvas></canvas>
+<script type="x-shader/x-vertex" id="vwireframe">
+attribute vec2 pos;
+uniform float t;
+uniform float Acamera;
+
+// wave parameters
+uniform float A, L, S;
+uniform vec2 D;
+
+// Equation 1
+float W1(vec2 p, float t, float A, float L, float S, vec2 D) {
+	return A * sin((dot(D, p) + t * S) * 2.0 / L);
+}
+
+
+mat2 R(float theta) {
+	theta = radians(theta);
+	float S = sin(theta), C = cos(theta);
+	return mat2(C, S, -S, C);
+}
+void main() {
+	vec3 gamepos = vec3(pos, 0.0);
+	gamepos.z += W1(pos, t, A, L, S, D);
+	gamepos.xy *= R(Acamera);
+	gamepos.yz *= R(70.0);
+	vec3 clippos = gamepos * 0.9;
+	gl_Position = vec4(clippos, 1.0);
+}
+</script>
+<script type="x-shader/x-fragment" id="fwireframe">
+precision mediump float;
+uniform vec3 color;
+void main() {
+	gl_FragColor = vec4(color, 1.0);
+}
+</script>
+
+<script>
+// https://developer.nvidia.com/gpugems/GPUGems/gpugems_ch01.html
+var tau = 2 * Math.PI
+canvas.width = canvas.style.width = 1000
+canvas.height = canvas.style.height = 1000
+
+var nrings = 20
+var data = [], ns = {}
+var posarray = []
+ns[[0, 0, 0]] = 0
+posarray.push(0, 0)
+data.push({ s: 0, r: 0, a: 0, x: 0, y: 0 })
+for (var s = 0 ; s < 6 ; ++s) {
+	for (var r = 1 ; r <= nrings ; ++r) {
+		for (var a = 0 ; a < r ; ++a) {
+			var theta = (s + a / r) / 6 * tau
+			var x = r * Math.cos(theta) / nrings, y = r * Math.sin(theta) / nrings
+			ns[[s, r, a]] = data.length
+			data.push({ s: s, r: r, a: a, x: x, y: y })
+			posarray.push(x, y)
+		}
+	}
+}
+var edgearray = [], triarray = []
+for (var s = 0 ; s < 6 ; ++s) {
+	var s2 = (s + 1) % 6
+	edgearray.push(ns[[0, 0, 0]], ns[[s, 1, 0]])
+	edgearray.push(ns[[s, 1, 0]], ns[[s2, 1, 0]])
+	triarray.push(ns[[0, 0, 0]], ns[[s, 1, 0]], ns[[s2, 1, 0]])
+	for (var r = 2 ; r <= nrings ; ++r) {
+		for (var a = 0 ; a + 1 < r ; ++a) {
+			edgearray.push(ns[[s, r - 1, a]], ns[[s, r, a]])
+			edgearray.push(ns[[s, r, a]], ns[[s, r, a + 1]])
+			edgearray.push(ns[[s, r - 1, a]], ns[[s, r, a + 1]])
+			triarray.push(ns[[s, r - 1, a]], ns[[s, r, a]], ns[[s, r, a + 1]])
+			if (a + 2 < r) triarray.push(ns[[s, r - 1, a]], ns[[s, r, a + 1]], ns[[s, r - 1, a + 1]])
+		}
+		edgearray.push(ns[[s2, r - 1, 0]], ns[[s, r, r - 1]])
+		edgearray.push(ns[[s, r, r - 1]], ns[[s2, r, 0]])
+		triarray.push(ns[[s, r - 1, r - 2]], ns[[s, r, r - 1]], ns[[s2, r - 1, 0]])
+		triarray.push(ns[[s2, r - 1, 0]], ns[[s, r, r - 1]], ns[[s2, r, 0]])
+	}
+}
+
+
+
+var gl = UFX.gl(canvas)
+gl.clearColor(0, 0, 0, 1)
+gl.addProgram("wireframe", "vwireframe", "fwireframe")
+gl.progs.wireframe.use()
+
+var pos = gl.getAttribLocation(gl.progs.wireframe, "pos")
+gl.enableVertexAttribArray(pos)
+
+var posbuffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, posbuffer)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(posarray), gl.STATIC_DRAW)
+gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
+
+var edgebuffer = gl.createBuffer()
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, edgebuffer)
+gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(edgearray), gl.STATIC_DRAW)
+
+var tribuffer = gl.createBuffer()
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, tribuffer)
+gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(triarray), gl.STATIC_DRAW)
+
+var Acamera = 0, t = 0
+var T = 1000
+UFX.ticker.init(function (dt) {
+	gl.clear(gl.COLOR_BUFFER_BIT)
+	gl.progs.wireframe.use()
+	Acamera = (Acamera + 5 * dt) % 360
+	t = (t + dt) % T
+	gl.progs.wireframe.set({
+		color: [0, 0.5, 0.5],
+		Acamera: Acamera,
+		t: t,
+		A: 0.01,
+		L: 0.1,
+		D: [0, 1],
+		S: 0.2,
+	})
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, tribuffer)
+	gl.drawElements(gl.TRIANGLES, triarray.length, gl.UNSIGNED_SHORT, 0)
+	gl.progs.wireframe.set.color([0, 1, 0])
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, edgebuffer)
+	gl.drawElements(gl.LINES, edgearray.length, gl.UNSIGNED_SHORT, 0)
+})
+
+</script>
