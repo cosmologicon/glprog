@@ -8,12 +8,18 @@ uniform float t;
 uniform float Acamera;
 
 // wave parameters
-uniform float A, L, S;
-uniform vec2 D;
+const int Nw = 4;  // number of waves
+uniform float A[Nw], L[Nw], S[Nw];
+uniform vec2 D[Nw];
+const float k = 2.2;  // wave roll exponent
 
 // Equation 1
 float W1(vec2 p, float t, float A, float L, float S, vec2 D) {
 	return A * sin((dot(D, p) + t * S) * 2.0 / L);
+}
+// Equation 8
+float W2(vec2 p, float t, float A, float L, float S, vec2 D) {
+	return 2.0 * A * pow((sin((dot(D, p) + t * S) * 2.0 / L) + 1.0) * 0.5, k);
 }
 
 
@@ -24,7 +30,9 @@ mat2 R(float theta) {
 }
 void main() {
 	vec3 gamepos = vec3(pos, 0.0);
-	gamepos.z += W1(pos, t, A, L, S, D);
+	for (int i = 0; i < Nw; ++i) {
+		gamepos.z += W1(pos, t, A[i], L[i], S[i], D[i]);
+	}
 	gamepos.xy *= R(Acamera);
 	gamepos.yz *= R(70.0);
 	vec3 clippos = gamepos * 0.9;
@@ -86,7 +94,7 @@ for (var s = 0 ; s < 6 ; ++s) {
 
 
 var gl = UFX.gl(canvas)
-gl.clearColor(0, 0, 0, 1)
+gl.clearColor(0.5, 0.4, 0.3, 1)
 gl.addProgram("wireframe", "vwireframe", "fwireframe")
 gl.progs.wireframe.use()
 
@@ -106,9 +114,53 @@ var tribuffer = gl.createBuffer()
 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, tribuffer)
 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(triarray), gl.STATIC_DRAW)
 
+var opts = {
+	wireframe: true,
+}
+
+var sim = {
+	N: 4,
+	waves: [],
+	randomwave: function () {
+		return {
+			t: 0,
+			T: UFX.random(10, 30),
+			A: 0,
+			Amax: UFX.random(0.002, 0.008),
+			L: UFX.random(0.06, 0.2),
+			D: this.randomD(),
+			S: UFX.random(0.1, 0.3),
+		}
+	},
+	randomD: function () {
+		var x = UFX.random(0.7, 1.3), y = UFX.random(-0.5, 0.5)
+		var d = Math.sqrt(x * x + y * y)
+		return [x / d, y / d]
+	},
+	think: function (dt) {
+		this.waves.forEach(function (wave) {
+			wave.t += dt
+			var f = wave.t / wave.T
+			wave.A = wave.Amax * 4 * f * (1 - f)
+		})
+		this.waves = this.waves.filter(wave => wave.t < wave.T)
+		while (this.waves.length < this.N) this.waves.push(this.randomwave())
+	},
+	uniforms: function () {
+		return {
+			A: this.waves.map(wave => wave.A),
+			S: this.waves.map(wave => wave.S),
+			L: this.waves.map(wave => wave.L),
+			D: [].concat.apply([], this.waves.map(wave => wave.D)),
+		}
+	},
+}
+for (var a = 0 ; a < 1000 ; ++a) sim.think(0.2)
+
 var Acamera = 0, t = 0
 var T = 1000
 UFX.ticker.init(function (dt) {
+	sim.think(dt)
 	gl.clear(gl.COLOR_BUFFER_BIT)
 	gl.progs.wireframe.use()
 	Acamera = (Acamera + 5 * dt) % 360
@@ -117,16 +169,15 @@ UFX.ticker.init(function (dt) {
 		color: [0, 0.5, 0.5],
 		Acamera: Acamera,
 		t: t,
-		A: 0.01,
-		L: 0.1,
-		D: [0, 1],
-		S: 0.2,
 	})
+	gl.progs.wireframe.set(sim.uniforms())
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, tribuffer)
 	gl.drawElements(gl.TRIANGLES, triarray.length, gl.UNSIGNED_SHORT, 0)
-	gl.progs.wireframe.set.color([0, 1, 0])
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, edgebuffer)
-	gl.drawElements(gl.LINES, edgearray.length, gl.UNSIGNED_SHORT, 0)
+	if (opts.wireframe) {
+		gl.progs.wireframe.set.color([0, 1, 0])
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, edgebuffer)
+		gl.drawElements(gl.LINES, edgearray.length, gl.UNSIGNED_SHORT, 0)
+	}
 })
 
 </script>
