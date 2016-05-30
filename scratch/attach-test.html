@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<script>
+function attach(obj, member, name) {
+	var pieces = name.split(/(?=[\.\[])/), n = pieces.length, joiners = {}
+	for (var i = 0 ; i < n ; ++i) {
+		for (var j = i + 1 ; j <= n ; ++j) {
+			var joiner = pieces.slice(i, j).join("").replace(/^\./, "")
+			if (joiner[0] == "[") joiner = j == i + 1 ? joiner.replace(/[\[\]]/g, "") : null
+			joiners[[i, j]] = joiner
+		}
+	}
+	var objchain = [obj]
+	for (var j = 1 ; j < n ; ++j) {
+		var joiner = joiners[[0, j]]
+		if (!obj[joiner]) obj[joiner] = {}
+		objchain.push(obj[joiner])
+	}
+	objchain.push(member)
+	for (var i = 0 ; i < n ; ++i) {
+		for (var j = i + 1 ; j <= n ; ++j) {
+			if (joiners[[i, j]]) objchain[i][joiners[[i, j]]] = objchain[j]
+		}
+	}
+}
+var a = {}, b1 = {}, b123 = {}, s0f = {}, s0f1 = {}
+attach(a, b1, "b[1]")
+attach(a, b123, "b[1][2][3]")
+attach(a, s0f, "s[0].f")
+attach(a, s0f1, "s[0].f[1]")
+
+</script>
+

@@ -55,6 +55,39 @@ UFX._gl = {
 		}
 		throw "Unable to find source from scriptId: " + scriptId
 	},
+
+	// Attaches member to obj such that obj[name] = member, but also breaks up name into
+	// components to allow various ways of accessing member through name. For instance, when
+	// name = "a.b[0][1].c", then all of the following will be references to member:
+	// obj["a.b[0][1].c"]
+	// obj.a["b[0][1].c"]
+	// obj.a["b[0]"][1].c
+	// obj.a.b[0][1].c
+	// Doesn't work for every possible value of name, but it should work for anything that's a valid
+	// WebGL uniform name.
+	_attach: function (obj, member, name) {
+		var pieces = name.split(/(?=[\.\[])/), n = pieces.length, joiners = {}
+		for (var i = 0 ; i < n ; ++i) {
+			for (var j = i + 1 ; j <= n ; ++j) {
+				var joiner = pieces.slice(i, j).join("").replace(/^\./, "")
+				if (joiner[0] == "[") joiner = j == i + 1 ? joiner.replace(/[\[\]]/g, "") : null
+				joiners[[i, j]] = joiner
+			}
+		}
+		var objchain = [obj]
+		for (var j = 1 ; j < n ; ++j) {
+			var joiner = joiners[[0, j]]
+			if (!obj[joiner]) obj[joiner] = {}
+			objchain.push(obj[joiner])
+		}
+		objchain.push(member)
+		for (var i = 0 ; i < n ; ++i) {
+			for (var j = i + 1 ; j <= n ; ++j) {
+				if (joiners[[i, j]]) objchain[i][joiners[[i, j]]] = objchain[j]
+			}
+		}
+	},
+
 	// Add convenience functions to the given program.
 	extendProgram: function (prog) {
 		var gl = this
@@ -69,25 +102,77 @@ UFX._gl = {
 			}
 		}
 		prog.uniforms = {}
+		prog.uniforminfo = {}
 		prog.setUniform = {}
 		prog.setUniformv = {}
 		prog.setUniformMatrix = {}
 		var n = this.getProgramParameter(prog, this.ACTIVE_UNIFORMS)
 		for (var i = 0 ; i < n ; ++i) {
 			var info = this.getActiveUniform(prog, i)
-			var location = this.getUniformLocation(prog, info.name)
-			prog.uniforms[info.name] = location
-			if (this.isMatrixType(info.type)) {
-				var func = this.getUniformMatrixSetter(prog, location, info.type)
-				prog.setUniformMatrix[info.name] = func
-				prog.set[info.name] = func
-			} else {
-				var func = this.getUniformSetter(prog, location, info.type)
-				var funcv = this.getUniformVectorSetter(prog, location, info.type)
-				prog.setUniform[info.name] = func
-				prog.setUniformv[info.name] = funcv
-				prog.set[info.name] = this.getTypeSize(info.type) == 1 ? func : funcv
+			// Arrays will appear as "aname[0]", but there actually n+1 uniforms that can be added.
+			var names = [info.name]
+			if (/\]$/.test(names[0])) {
+				names[0] = names[0].replace(/\[[^\[]*$/, "")
+				for (var j = 0 ; j < info.size ; ++j) {
+					names.push(names[0] + "[" + j + "]")
+				}
 			}
+			this._attach(prog.uniforminfo, info, names[0])
+			var locations = []
+			for (var j = 0 ; j < names.length ; ++j) {
+				var name = names[j]
+				var location = this.getUniformLocation(prog, name)
+				this._attach(prog.uniforms, location, name)
+				// The number of arguments expected by the v-setter
+				var argc = this.getTypeSize(info.type), typename = this.getName(info.type)
+				if (this.isMatrixType(info.type)) argc *= argc
+				if (j == 0 && names.length > 1) {
+					argc *= info.size
+					typename += "[" + info.size + "]"
+				}
+				if (this.isMatrixType(info.type)) {
+					var func = this.getUniformMatrixSetter(prog, location, info.type)
+					funcv = this._checkvarg(func, argc, name, typename, "Matrix")
+					this._attach(prog.setUniformMatrix, func, name)
+					this._attach(prog.set, func, name)
+				} else {
+					var func = this.getUniformSetter(prog, location, info.type)
+					func = this._checkarg(func, argc, name, typename)
+					var funcv = this.getUniformVectorSetter(prog, location, info.type)
+					funcv = this._checkvarg(funcv, argc, name, typename, "Vector")
+					this._attach(prog.setUniform, func, name)
+					this._attach(prog.setUniformv, funcv, name)
+					this._attach(prog.set, argc == 1 ? func : funcv, name)
+				}
+			}
+		}
+	},
+
+	// returns true if the array-like object a has length n and contains only Numbers or Booleans
+	_checkn: function (a, n) {
+		return a.length == n &&
+			[].every.call(a, function (x) { return typeof x == "number" || typeof x == "boolean" })
+	},
+
+	// Wrap a function to require it takes exactly argc arguments
+	_checkarg: function (func, argc, name, type) {
+		return function () {
+			if (UFX._gl._checkn(arguments, argc)) {
+				return func.apply(this, arguments)
+			}
+			throw ("Setter for uniform " + name + " (type " + type + ") expects exactly " +
+				argc + " numerical arguments.")
+		}
+	},
+
+	// Wrap a function to require it takes a single array argument of length argc
+	_checkvarg: function (func, argc, name, type, settertype) {
+		return function (arg) {
+			if (arguments.length == 1 && arg.length && UFX._gl._checkn(arg, argc)) {
+				return func.apply(this, arguments)
+			}
+			throw (settertype + " setter for uniform " + name + " (type " + type +
+				") expects a single argument of exactly " + argc + " numerical elements.")
 		}
 	},
 
@@ -225,9 +310,9 @@ UFX._gl = {
 	},
 	getUniformMatrixSetter: function (prog, location, type) {
 		if (!this.isMatrixType(type)) {
-			throw "Cannot call getUniformSetter on non-matrix type " + this.getName(type)
+			throw "Cannot call getUniformMatrixSetter on non-matrix type " + this.getName(type)
 		}
-		var methodname = "uniformMatrix" + this.getTypeSize(type) + this.getTypeLetter(type)
+		var methodname = "uniformMatrix" + this.getTypeSize(type) + this.getTypeLetter(type) + "v"
 		return this[methodname].bind(this, location, false)
 	},
 	makeFloatBuffer: function (data, mode) {

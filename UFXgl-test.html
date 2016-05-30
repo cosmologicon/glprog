@@ -1,38 +1,105 @@
 <!DOCTYPE html>
 <script src="UFXgl.js"></script>
 <script type="x-shader/x-vertex" id="vshader">
-uniform float psize;
+uniform float x;
+uniform vec2 v;
+uniform mat2 m;
+uniform float a[3];
 void main() {
-	gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
-	gl_PointSize = psize;
+	gl_Position = vec4(m * v + vec2(x, 0.0), 0.0, 1.0);
+	gl_PointSize = a[0] + a[1] + a[2];
 }
 </script>
 <script type="x-shader/x-vertex" id="fshader">
 precision highp float;
-uniform vec4 color;
+uniform vec2 b[3];
+uniform mat2 c[3];
+struct T {
+	ivec2 g;
+};
+struct S {
+	float f[2];
+	T t;
+};
+uniform S s[3];
 void main() {
-	gl_FragColor = color;
+	gl_FragColor = vec4(b[0] + b[1] + b[2], 0.0, 1.0);
+	gl_FragColor.gb += c[0][0] + c[1][0] + c[2][1];
+	gl_FragColor.b += 0.1 * (s[0].f[0] + s[1].f[1] + float(s[2].t.g[0] + s[0].t.g[1]));
 }
 </script>
 <body>
 <canvas id=canvas></canvas>
 </body>
 <script>
+canvas.width = canvas.style.width = 400
+canvas.height = canvas.style.height = 400
 var gl = UFX.gl(canvas)
 gl.addProgram("fill", "vshader", "fshader")
 gl.clearColor(0, 0, 0, 1)
 gl.clear(gl.COLOR_BUFFER_BIT)
 gl.progs.fill.use()
-gl.progs.fill.set.psize(50)
-gl.progs.fill.set.color([0, 1, 0, 1])
-gl.drawArrays(gl.POINTS, 0, 1)
-gl.progs.fill.set({ psize: 20, color: [1, 0, 0, 1] })
+
+var x = gl.getUniformLocation(gl.progs.fill, "x")
+gl.uniform1f(x, 0.4)
+gl.uniform1f(x, [0.4])  // works???
+gl.uniform1fv(x, [0.4])
+gl.progs.fill.setUniform.x(0.4)
+gl.progs.fill.setUniformv.x([0.4])
+gl.progs.fill.set.x(0.4)
+gl.progs.fill.set.x(0)
+
+var v = gl.getUniformLocation(gl.progs.fill, "v")
+gl.uniform2f(v, 0.5, 0.5)
+gl.uniform2f(v, [0.5], [0.5])  // works?!
+gl.uniform2fv(v, [0.5, 0.5])
+gl.progs.fill.setUniform.v(0.5, 0.5)
+gl.progs.fill.setUniformv.v([0.5, 0.5])
+gl.progs.fill.set.v([0.5, 0.5])
+gl.progs.fill.set.v([1, 0])
+
+var m = gl.getUniformLocation(gl.progs.fill, "m")
+gl.uniformMatrix2fv(m, false, [0, 0.5, 0.5, 0])
+gl.uniformMatrix2fv(m, false, [[0], [0.5], 0.5, 0])   // works?!
+gl.progs.fill.setUniformMatrix.m([0, 0.5, 0.5, 0])
+gl.progs.fill.set.m([0, 0.5, 0.5, 0])
+
+var a = gl.getUniformLocation(gl.progs.fill, "a")
+var a0 = gl.getUniformLocation(gl.progs.fill, "a[0]")
+var a1 = gl.getUniformLocation(gl.progs.fill, "a[1]")
+gl.uniform1f(a, 10)
+gl.uniform1f(a1, 10)
+gl.uniform1fv(a0, [10, 20, 30])
+gl.uniform1fv(a, [10, 20, 30])
+gl.progs.fill.set.a([10, 20, 30])
+gl.progs.fill.set.a[1](10)
+
+var b = gl.getUniformLocation(gl.progs.fill, "b")
+var b0 = gl.getUniformLocation(gl.progs.fill, "b[0]")
+var b1 = gl.getUniformLocation(gl.progs.fill, "b[1]")
+gl.uniform2f(b0, 0.4, 0.4)
+gl.uniform2fv(b1, [0.4, -0.4])
+gl.uniform2fv(b, [0.3, 0.3, 0.3, 0.3, 0.3, 0.3])
+gl.uniform2fv(b, [0, 0, 0, 0, 0, 0])
+gl.progs.fill.set.b([0, 0, 0, 0, 0, 0])
+
+var c = gl.getUniformLocation(gl.progs.fill, "c")
+var c0 = gl.getUniformLocation(gl.progs.fill, "c[0]")
+var c1 = gl.getUniformLocation(gl.progs.fill, "c[1]")
+gl.uniformMatrix2fv(c0, false, [0.4, 0.4, 0, 0])
+gl.uniformMatrix2fv(c, false, [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, -0.5, -0.5])
+
+
+gl.progs.fill.set.s[0].f([5, 0])
+gl.progs.fill.setUniform.s[2].t.g(-3, 0)
+gl.progs.fill.set["s[2].t"].g([0, 0])
+
 gl.drawArrays(gl.POINTS, 0, 1)
 
 var pixels = new Uint8Array(64 * 64 * 4)
 for (var j = 0 ; j < pixels.length ; ++j) pixels[j] = j % 4 < 3 ? Math.random() * 255 : 255
 var texture = gl.buildTexture({ pixels: pixels, size: 64 })
-gl.dumpTexture(texture)
+//gl.dumpTexture(texture)
 
 </script>
 
