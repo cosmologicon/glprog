@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<title>Phong lighting test</title>
+<script src="http://ufx.space/UFX.js"></script>
+<script src="../UFXgl.js"></script>
+<p><canvas id=canvas></canvas>
+<script id=vsource type="x-shader/x-vertex">
+attribute vec3 pos;
+attribute vec3 normal;
+uniform float zoom;
+uniform float pfactor;
+uniform bool outlining;
+varying vec3 fnormal;
+uniform mat3 mrot;  // rotation matrix
+void main() {
+	gl_Position = vec4(zoom * mrot * pos, 1.0);
+	fnormal = mrot * normal;
+	gl_Position.w = 1.0 + pfactor * gl_Position.z;
+	gl_Position.z /= 4.0;
+	if (outlining) gl_Position.z += 0.02;
+}
+</script>
+<script id=fsource type="x-shader/x-fragment">
+uniform mediump vec3 color;
+uniform mediump vec3 lightpos;
+varying mediump vec3 fnormal;
+uniform bool outlining;
+void main() {
+	mediump float shade = 0.6 + 0.3 * dot(fnormal, lightpos);
+	gl_FragColor = vec4(color * shade, 1.0);
+	if (outlining) gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+}
+</script>
+<script>
+"use strict"
+var tau = 2 * Math.PI
+
+var canvas = document.getElementById("canvas")
+canvas.width = 600
+canvas.height = 600
+UFX.mouse.init(canvas)
+UFX.mouse.capture.wheel = true
+UFX.mouse.capture.right = true
+
+var gl = UFX.gl(canvas)
+gl.clearColor(0.5, 0.5, 0.7, 1)
+gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+gl.enable(gl.DEPTH_TEST)
+var prog = gl.buildProgram("vsource", "fsource")
+prog.use()
+
+
+function flatten(a) {
+	var n = 0
+	a.forEach(function (c) { n += c.length })
+	var b = new Array(n)
+	for (var j = 0, k = 0 ; j < a.length ; ++j) {
+		for (var i = 0 ; i < a[j].length ; ++k, ++i) {
+			b[k] = a[j][i]
+		}
+	}
+	return b
+}
+
+// quaternions implemented as <i, j, k, 1>.
+function qmult(p, q) {
+	return [
+		p[0] * q[3] + p[3] * q[0] + p[1] * q[2] - p[2] * q[1],
+		p[1] * q[3] + p[3] * q[1] + p[2] * q[0] - p[0] * q[2],
+		p[2] * q[3] + p[3] * q[2] + p[0] * q[1] - p[1] * q[0],
+		p[3] * q[3] - p[0] * q[0] - p[1] * q[1] - p[2] * q[2],
+	]
+}
+function qnorm(q) {
+	var a = Math.sqrt(q.map(x => x * x).reduce((x, y) => x + y))
+	return a ? q.map(x => x / a) : [0, 0, 0, 1]
+}
+function qrot(q) {
+	var x = q[0], y = q[1], z = q[2], w = q[3]
+	return [
+		1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w),
+		2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w),
+		2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)
+	]
+}
+
+function torus() {
+	var N = 12, n = 12, R = 2, r = 1
+	var data = [], ns = {}
+	for (var i = 0 ; i < N ; ++i) {
+		var A = tau * i / N, CA = Math.cos(A), SA = Math.sin(A)
+		for (var j = 0 ; j < n ; ++j) {
+			var B = tau * j / n, CB = Math.cos(B), SB = Math.sin(B)
+			ns[[i, j]] = data.length
+			data.push([
+				R * CA + r * CB * CA, R * SA + r * CB * SA, r * SB,  // position
+				CB * CA, CB * SA, SB,  // normal
+			])
+		}
+	}
+	var triangles = [], wireframe = []
+	for (var i = 0 ; i < N ; ++i) {
+		var i2 = (i + 1) % N
+		for (var j = 0 ; j < n ; ++j) {
+			var j2 = (j + 1) % n
+			var a = ns[[i, j]], b = ns[[i2, j]], c = ns[[i, j2]], d = ns[[i2, j2]]
+			wireframe.push(a, b, a, c, b, c)
+			triangles.push(a, b, c, b, d, c)
+		}
+	}
+	return {
+		data: [].concat.apply([], data),
+		triangles: triangles,
+		wireframe: wireframe,
+	}
+}
+
+
+var solid = torus()
+var buffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(solid.data), gl.STATIC_DRAW)
+
+var q = qnorm([2, 0, 0, 1])
+var zoom = 0.2
+var pfactor = 0.5
+prog.set.color([0, 0.6, 0.4])
+prog.set.lightpos([0.5773, 0.5773, 0.5773])
+
+var attribs = {
+	pos: gl.getAttribLocation(prog, "pos"),
+	normal: gl.getAttribLocation(prog, "normal")
+}
+gl.enableVertexAttribArray(attribs.pos)
+gl.enableVertexAttribArray(attribs.normal)
+
+var tribuffer = gl.createBuffer()
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, tribuffer)
+gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(solid.triangles), gl.STATIC_DRAW)
+
+var wirebuffer = gl.createBuffer()
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, wirebuffer)
+gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(solid.wireframe), gl.STATIC_DRAW)
+
+// gl.lineWidth(4)
+
+function think(dt) {
+	var mstate = UFX.mouse.state()
+	if (mstate.left.isdown) {
+		var dq = qnorm([0.005 * mstate.dpos[1], 0.005 * mstate.dpos[0], 0, 1])
+		q = qnorm(qmult(q, dq))
+	} else if (mstate.right.isdown) {
+		pfactor -= 0.003 * mstate.dpos[1]
+		pfactor = Math.min(Math.max(pfactor, 0), 3)
+	}
+	canvas.style.cursor = mstate.left.isdown ? "move" : mstate.right.isdown ? "ns-resize" : "pointer"
+	zoom *= Math.exp(0.03 * mstate.wheeldy)
+	prog.set({
+		mrot: qrot(q),
+		zoom: zoom,
+		pfactor: pfactor,
+		outlining: false,
+	})
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	if (!solid) return
+	gl.vertexAttribPointer(attribs.pos, 3, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0 * Float32Array.BYTES_PER_ELEMENT)
+	gl.vertexAttribPointer(attribs.normal, 3, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT)
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, tribuffer)
+	gl.drawElements(gl.TRIANGLES, solid.triangles.length, gl.UNSIGNED_SHORT, 0)
+
+/*
+	if (document.getElementById("dooutline").checked) {
+		prog.set.outlining(true)
+		gl.disableVertexAttribArray(prog.attribs.normal)
+		gl.vertexAttribPointer(prog.attribs.pos, 3, gl.FLOAT, false, 0, solid.outline * 4)
+		gl.drawArrays(gl.LINES, 0, 6 * solid.n)
+		gl.enableVertexAttribArray(prog.attribs.normal)
+	}
+*/
+}
+UFX.ticker.init(think)
+</script>
+
