@@ -95,7 +95,9 @@ UFX._gl = {
 	},
 
 	// Add convenience functions to the given program.
-	extendProgram: function (prog) {
+	extendProgram: function (prog, opts) {
+		opts = opts || {}
+		var checkargs = "checkargs" in opts ? opts.checkargs : true
 		var gl = this
 		prog.use = function () {
 			gl.useProgram(prog)
@@ -138,14 +140,16 @@ UFX._gl = {
 				}
 				if (this.isMatrixType(info.type)) {
 					var func = this.getUniformMatrixSetter(prog, location, info.type)
-					funcv = this._checkvarg(func, argc, name, typename, "Uniform matrix")
+					if (checkargs) func = this._checkvarg(func, argc, name, typename, "Uniform matrix")
 					this._attach(prog.setUniformMatrix, func, name)
 					this._attach(prog.set, func, name)
 				} else {
 					var func = this.getUniformSetter(prog, location, info.type)
-					func = this._checkarg(func, argc, name, typename, "Uniform")
 					var funcv = this.getUniformVectorSetter(prog, location, info.type)
-					funcv = this._checkvarg(funcv, argc, name, typename, "Uniform vector")
+					if (checkargs) {
+						func = this._checkarg(func, argc, name, typename, "Uniform")
+						funcv = this._checkvarg(funcv, argc, name, typename, "Uniform vector")
+					}
 					this._attach(prog.setUniform, func, name)
 					this._attach(prog.setUniformv, funcv, name)
 					this._attach(prog.set, argc == 1 ? func : funcv, name)
@@ -174,9 +178,11 @@ UFX._gl = {
 				var name = names[j], index = index0 + j
 				this._attach(prog.attribs, index, name)
 				var func = this.getAttribSetter(prog, index, info.type)
-				func = this._checkarg(func, argc, name, typename, "Vertex attribute")
 				var funcv = this.getAttribVectorSetter(prog, index, info.type)
-				funcv = this._checkvarg(funcv, argc, name, typename, "Vertex attribute vector")
+				if (checkargs) {
+					func = this._checkarg(func, argc, name, typename, "Vertex attribute")
+					funcv = this._checkvarg(funcv, argc, name, typename, "Vertex attribute vector")
+				}
 				this._attach(prog.setAttrib, func, name)
 				this._attach(prog.setAttribv, funcv, name)
 				this._attach(prog.set, argc == 1 ? func : funcv, name)
@@ -360,10 +366,21 @@ UFX._gl = {
 		var methodname = "vertexAttrib" + this.getTypeSize(type) + this.getTypeLetter(type) + "v"
 		return this[methodname].bind(this, index)
 	},
-	makeFloatBuffer: function (data, mode) {
+	makeArrayBuffer: function (data, opts) {
+		opts = opts || {}
 		var buffer = this.createBuffer()
 		this.bindBuffer(this.ARRAY_BUFFER, buffer)
-		this.bufferData(this.ARRAY_BUFFER, new Float32Array(data), (mode || this.STATIC_DRAW))
+		this.bufferData(this.ARRAY_BUFFER, new (opts.type || Float32Array)(data), (opts.mode || this.STATIC_DRAW))
+		buffer.bind = this.bindBuffer.bind(this, this.ARRAY_BUFFER, buffer)
+		return buffer
+	},
+	makeElementBuffer: function (data, opts) {
+		opts = opts || {}
+		var buffer = this.createBuffer()
+		this.bindBuffer(this.ELEMENT_ARRAY_BUFFER, buffer)
+		this.bufferData(this.ELEMENT_ARRAY_BUFFER, new (opts.type || Uint16Array)(data), (opts.mode || this.STATIC_DRAW))
+		buffer.bind = this.bindBuffer.bind(this, this.ELEMENT_ARRAY_BUFFER, buffer)
+		return buffer
 	},
 	// Assigns pointers for the attributes corresponding to the given names.
 	// Also enables the attributes as arrays.
@@ -390,10 +407,8 @@ UFX._gl = {
 }
 
 UFX.gl = function (canvas, opts) {
-	opts = opts || {}
 	var gl = canvas.getContext("webgl")
 	if (!gl) return gl
-	gl.DEBUG = opts.DEBUG
 	for (var method in UFX._gl) gl[method] = UFX._gl[method]
 	return gl
 }

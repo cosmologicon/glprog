@@ -127,7 +127,7 @@ function qrot(q) {
 }
 
 function torus(N) {
-	var n = N, R = 2, r = 1
+	var R = 2, r = 1, n = Math.ceil(N * r / R)
 	var data = [], ns = {}
 	for (var i = 0 ; i < N ; ++i) {
 		var A = tau * i / N, CA = Math.cos(A), SA = Math.sin(A)
@@ -163,18 +163,9 @@ function torus(N) {
 var solid = null
 function build(N) {
 	solid = torus(N)
-
-	solid.buffer = gl.createBuffer()
-	gl.bindBuffer(gl.ARRAY_BUFFER, solid.buffer)
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(solid.data), gl.STATIC_DRAW)
-
-	solid.tribuffer = gl.createBuffer()
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, solid.tribuffer)
-	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(solid.triangles), gl.STATIC_DRAW)
-
-	solid.wirebuffer = gl.createBuffer()
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, solid.wirebuffer)
-	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(solid.wireframe), gl.STATIC_DRAW)
+	solid.buffer = gl.makeArrayBuffer(solid.data)
+	solid.tribuffer = gl.makeElementBuffer(solid.triangles)
+	solid.wirebuffer = gl.makeElementBuffer(solid.wireframe)
 }
 build(10)
 
@@ -221,9 +212,9 @@ function think(dt) {
 			C: [0, 0, 0],
 			dz: 0.1,
 		})
-		gl.bindBuffer(gl.ARRAY_BUFFER, solid.buffer)
+		solid.buffer.bind()
 		gl.progs.solid.assignAttribOffsets({ pos: 0 }, { stride: 9 })
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, solid.wirebuffer)
+		solid.wirebuffer.bind()
 		gl.lineWidth(Math.ceil(40 * zoom))
 		gl.drawElements(gl.LINES, solid.wireframe.length, gl.UNSIGNED_SHORT, 0)
 	}
@@ -241,9 +232,9 @@ function think(dt) {
 		renormalize: controls.renormalize,
 		drough: controls.drough,
 	})
-	gl.bindBuffer(gl.ARRAY_BUFFER, solid.buffer)
+	solid.buffer.bind()
 	gl.progs.phong.assignAttribOffsets({ pos: 0, normal: 3, rough: 6 })
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, solid.tribuffer)
+	solid.tribuffer.bind()
 	gl.drawElements(gl.TRIANGLES, solid.triangles.length, gl.UNSIGNED_SHORT, 0)
 
 	if (controls.wireframe) {
@@ -256,9 +247,9 @@ function think(dt) {
 			C: [0, 0.5, 0],
 			dz: -0.001,
 		})
-		gl.bindBuffer(gl.ARRAY_BUFFER, solid.buffer)
+		solid.buffer.bind()
 		gl.progs.solid.assignAttribOffsets({ pos: 0 }, { stride: 9 })
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, solid.wirebuffer)
+		solid.wirebuffer.bind()
 		gl.drawElements(gl.LINES, solid.wireframe.length, gl.UNSIGNED_SHORT, 0)
 	}
 }
