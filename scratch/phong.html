@@ -101,7 +101,7 @@ var gl = UFX.gl(canvas)
 gl.clearColor(0.5, 0.5, 0.7, 1)
 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 gl.enable(gl.DEPTH_TEST)
-gl.addProgram("phong", "vsource", "fphong")
+gl.addProgram("phong", "vsource", "fphong", { attribs: { "pos": 2 }})
 gl.addProgram("solid", "vsource", "fsolid")
 
 // quaternions implemented as <i, j, k, 1>.
@@ -175,13 +175,6 @@ function build(N) {
 	solid.wirebuffer = gl.createBuffer()
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, solid.wirebuffer)
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(solid.wireframe), gl.STATIC_DRAW)
-
-	gl.enableVertexAttribArray(gl.progs.phong.attributes.pos)
-	gl.enableVertexAttribArray(gl.progs.phong.attributes.normal)
-	gl.enableVertexAttribArray(gl.progs.phong.attributes.rough)
-	gl.vertexAttribPointer(gl.progs.phong.attributes.pos, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 0 * Float32Array.BYTES_PER_ELEMENT)
-	gl.vertexAttribPointer(gl.progs.phong.attributes.normal, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT)
-	gl.vertexAttribPointer(gl.progs.phong.attributes.rough, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT)
 }
 build(10)
 
@@ -229,6 +222,8 @@ function think(dt) {
 			dz: 0.1,
 		})
 		gl.bindBuffer(gl.ARRAY_BUFFER, solid.buffer)
+		gl.enableVertexAttribArray(gl.progs.solid.attribs.pos)
+		gl.vertexAttribPointer(gl.progs.solid.attribs.pos, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 0 * Float32Array.BYTES_PER_ELEMENT)
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, solid.wirebuffer)
 		gl.lineWidth(Math.ceil(40 * zoom))
 		gl.drawElements(gl.LINES, solid.wireframe.length, gl.UNSIGNED_SHORT, 0)
@@ -248,6 +243,12 @@ function think(dt) {
 		drough: controls.drough,
 	})
 	gl.bindBuffer(gl.ARRAY_BUFFER, solid.buffer)
+	gl.enableVertexAttribArray(gl.progs.phong.attribs.pos)
+	gl.enableVertexAttribArray(gl.progs.phong.attribs.normal)
+	gl.enableVertexAttribArray(gl.progs.phong.attribs.rough)
+	gl.vertexAttribPointer(gl.progs.phong.attribs.pos, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 0 * Float32Array.BYTES_PER_ELEMENT)
+	gl.vertexAttribPointer(gl.progs.phong.attribs.normal, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT)
+	gl.vertexAttribPointer(gl.progs.phong.attribs.rough, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT)
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, solid.tribuffer)
 	gl.drawElements(gl.TRIANGLES, solid.triangles.length, gl.UNSIGNED_SHORT, 0)
 
@@ -262,6 +263,8 @@ function think(dt) {
 			dz: -0.001,
 		})
 		gl.bindBuffer(gl.ARRAY_BUFFER, solid.buffer)
+		gl.enableVertexAttribArray(gl.progs.solid.attribs.pos)
+		gl.vertexAttribPointer(gl.progs.solid.attribs.pos, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 0 * Float32Array.BYTES_PER_ELEMENT)
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, solid.wirebuffer)
 		gl.drawElements(gl.LINES, solid.wireframe.length, gl.UNSIGNED_SHORT, 0)
 	}

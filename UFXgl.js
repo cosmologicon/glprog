@@ -14,13 +14,14 @@ UFX._gl = {
 		this.canvas.height = h
 		this.viewport(0, 0, w, h)
 	},
-	addProgram: function (progname, vsource, fsource) {
+	addProgram: function (progname, vsource, fsource, opts) {
 		if (!this.progs) this.progs = {}
-		var prog = this.progs[progname] = this.buildProgram(vsource, fsource)
+		var prog = this.progs[progname] = this.buildProgram(vsource, fsource, opts)
 		return prog
 	},
 	// Build a program, using the given source for the vertex and fragment shaders.
-	buildProgram: function (vsource, fsource) {
+	buildProgram: function (vsource, fsource, opts) {
+		opts = opts || {}
 		var prog = this.createProgram()
 		var vshader = this.createShader(this.VERTEX_SHADER)
 		this.shaderSource(vshader, this.findSource(vsource))
@@ -36,6 +37,11 @@ UFX._gl = {
 			throw "Error compiling fragment shader:\n" + this.getShaderInfoLog(fshader)
 		}
 		this.attachShader(prog, fshader)
+		if (opts.attribs) {
+			for (var name in opts.attribs) {
+				this.bindAttribLocation(prog, opts.attribs[name], name)
+			}
+		}
 		this.linkProgram(prog)
 		if (!this.getProgramParameter(prog, this.LINK_STATUS)) {
 			throw "Error linking program:\n" + this.getProgramInfoLog(prog)
@@ -132,18 +138,48 @@ UFX._gl = {
 				}
 				if (this.isMatrixType(info.type)) {
 					var func = this.getUniformMatrixSetter(prog, location, info.type)
-					funcv = this._checkvarg(func, argc, name, typename, "Matrix")
+					funcv = this._checkvarg(func, argc, name, typename, "Uniform matrix")
 					this._attach(prog.setUniformMatrix, func, name)
 					this._attach(prog.set, func, name)
 				} else {
 					var func = this.getUniformSetter(prog, location, info.type)
-					func = this._checkarg(func, argc, name, typename)
+					func = this._checkarg(func, argc, name, typename, "Uniform")
 					var funcv = this.getUniformVectorSetter(prog, location, info.type)
-					funcv = this._checkvarg(funcv, argc, name, typename, "Vector")
+					funcv = this._checkvarg(funcv, argc, name, typename, "Uniform vector")
 					this._attach(prog.setUniform, func, name)
 					this._attach(prog.setUniformv, funcv, name)
 					this._attach(prog.set, argc == 1 ? func : funcv, name)
 				}
+			}
+		}
+		prog.attribs = {}
+		prog.attribinfo = {}
+		prog.setAttrib = {}
+		prog.setAttribv = {}
+		n = this.getProgramParameter(prog, this.ACTIVE_ATTRIBUTES)
+		for (var i = 0 ; i < n ; ++i) {
+			var info = this.getActiveAttrib(prog, i)
+			if (info.size != 1) throw "Can't handle attribute arrays! (for attrib " + info.name + ")"
+			var index0 = gl.getAttribLocation(prog, info.name)
+			this._attach(prog.attribinfo, info, info.name)
+			var names = [info.name]
+			var argc = this.getTypeSize(info.type)
+			if (this.isMatrixType(info.type)) {
+				names = []
+				for (var j = 0 ; j < argc ; ++j) {
+					names.push(info.name + "[" + j + "]")
+				}
+			}
+			for (var j = 0 ; j < names.length ; ++j) {
+				var name = names[j], index = index0 + j
+				this._attach(prog.attribs, index, name)
+				var func = this.getAttribSetter(prog, index, info.type)
+				func = this._checkarg(func, argc, name, typename, "Vertex attribute")
+				var funcv = this.getAttribVectorSetter(prog, index, info.type)
+				funcv = this._checkvarg(funcv, argc, name, typename, "Vertex attribute vector")
+				this._attach(prog.setAttrib, func, name)
+				this._attach(prog.setAttribv, funcv, name)
+				this._attach(prog.set, argc == 1 ? func : funcv, name)
 			}
 		}
 	},
@@ -155,12 +191,12 @@ UFX._gl = {
 	},
 
 	// Wrap a function to require it takes exactly argc arguments
-	_checkarg: function (func, argc, name, type) {
+	_checkarg: function (func, argc, name, type, settertype) {
 		return function () {
 			if (UFX._gl._checkn(arguments, argc)) {
 				return func.apply(this, arguments)
 			}
-			throw ("Setter for uniform " + name + " (type " + type + ") expects exactly " +
+			throw (settertype + " setter for " + name + " (type " + type + ") expects exactly " +
 				argc + " numerical arguments.")
 		}
 	},
@@ -171,7 +207,7 @@ UFX._gl = {
 			if (arguments.length == 1 && arg.length && UFX._gl._checkn(arg, argc)) {
 				return func.apply(this, arguments)
 			}
-			throw (settertype + " setter for uniform " + name + " (type " + type +
+			throw (settertype + " setter for " + name + " (type " + type +
 				") expects a single argument of exactly " + argc + " numerical elements.")
 		}
 	},
@@ -314,6 +350,14 @@ UFX._gl = {
 		}
 		var methodname = "uniformMatrix" + this.getTypeSize(type) + this.getTypeLetter(type) + "v"
 		return this[methodname].bind(this, location, false)
+	},
+	getAttribSetter: function (prog, index, type) {
+		var methodname = "vertexAttrib" + this.getTypeSize(type) + this.getTypeLetter(type)
+		return this[methodname].bind(this, index)
+	},
+	getAttribVectorSetter: function (prog, index, type) {
+		var methodname = "vertexAttrib" + this.getTypeSize(type) + this.getTypeLetter(type) + "v"
+		return this[methodname].bind(this, index)
 	},
 	makeFloatBuffer: function (data, mode) {
 		var buffer = this.createBuffer()
