@@ -182,6 +182,7 @@ UFX._gl = {
 				this._attach(prog.set, argc == 1 ? func : funcv, name)
 			}
 		}
+		prog.assignAttribOffsets = this.assignAttribOffsets.bind(this, prog)
 	},
 
 	// returns true if the array-like object a has length n and contains only Numbers or Booleans
@@ -363,6 +364,28 @@ UFX._gl = {
 		var buffer = this.createBuffer()
 		this.bindBuffer(this.ARRAY_BUFFER, buffer)
 		this.bufferData(this.ARRAY_BUFFER, new Float32Array(data), (mode || this.STATIC_DRAW))
+	},
+	// Assigns pointers for the attributes corresponding to the given names.
+	// Also enables the attributes as arrays.
+	assignAttribOffsets: function (prog, offsets, opts) {
+		opts = opts || {}
+		var datatype = opts.type || gl.FLOAT
+		var normalize = "normalize" in opts ? opts.normalize : false
+		var bytes = opts.bytes || Float32Array.BYTES_PER_ELEMENT, stride
+		if ("stride" in opts) {
+			stride = opts.stride
+		} else {
+			stride = 0
+			for (var name in offsets) {
+				var size = this.getTypeSize(prog.attribinfo[name].type)
+				stride = Math.max(stride, offsets[name] + size)
+			}
+		}
+		for (var name in offsets) {
+			var size = this.getTypeSize(prog.attribinfo[name].type)
+			this.enableVertexAttribArray(prog.attribs[name])
+			this.vertexAttribPointer(prog.attribs[name], size, datatype, normalize, stride * bytes, offsets[name] * bytes)
+		}
 	},
 }
 
