@@ -17,6 +17,9 @@ WebGL specifically.
 * [Lesson 02. WebGL programs](02.md)
 * [Lesson 03. drawing single points](03.md)
 * [Lesson 04. depth and blending](04.md)
+
+I'm still working on the following lessons. They should be considered drafts for the time being:
+
 * [Lesson 05. GLSL part 1: types and precision](05.md)
 * [Lesson 06. GLSL part 2: functions](06.md)
 * [Lesson 07. GLSL part 3: shading](07.md)
