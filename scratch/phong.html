@@ -2,32 +2,88 @@
 <title>Phong lighting test</title>
 <script src="http://ufx.space/UFX.js"></script>
 <script src="../UFXgl.js"></script>
+<script src="../../UFX/src/mouse.js"></script>
+<div id=controls style="float:right">
+<p><input type=range min=0 max=1 step=0.01 value=0.0 id=Lar>ambient light red channel</input>
+<p><input type=range min=0 max=1 step=0.01 value=0.3 id=Lag>ambient light green channel</input>
+<p><input type=range min=0 max=1 step=0.01 value=0.4 id=Lab>ambient light blue channel</input>
+<p><input type=range min=0 max=1 step=0.01 value=0.0 id=Ldr>diffuse light red channel</input>
+<p><input type=range min=0 max=1 step=0.01 value=0.3 id=Ldg>diffuse light green channel</input>
+<p><input type=range min=0 max=1 step=0.01 value=0.4 id=Ldb>diffuse light blue channel</input>
+<p><input type=range min=0 max=1 step=0.01 value=0.3 id=Lsr>specular light red channel</input>
+<p><input type=range min=0 max=1 step=0.01 value=0.3 id=Lsg>specular light green channel</input>
+<p><input type=range min=0 max=1 step=0.01 value=0.3 id=Lsb>specular light blue channel</input>
+<p><input type=range min=0 max=20 step=0.1 value=8 id=alpha>specular attenuation factor</input>
+<p><input type=range min=0 max=3 step=0.01 value=0.4 id=pfactor>perspective skew factor</input>
+<p><input type=checkbox checked id=renormalize>renormalize</input>
+<p><input type=checkbox checked id=outline>outline</input>
+<p><input type=checkbox id=wireframe>wireframe</input>
+<p><input type=range min=4 max=100 step=1 value=60 id=N>face count</input>
+<p><input type=range min=0 max=0.5 step=0.01 value=0 id=drough>roughness</input>
+</div>
 <p><canvas id=canvas></canvas>
 <script id=vsource type="x-shader/x-vertex">
 attribute vec3 pos;
-attribute vec3 normal;
+attribute vec3 normal, rough;
 uniform float zoom;
 uniform float pfactor;
-uniform bool outlining;
-varying vec3 fnormal;
-uniform mat3 mrot;  // rotation matrix
+uniform float dz;
+uniform float drough;
+uniform mat3 mrot;
+varying vec3 P, N;
 void main() {
 	gl_Position = vec4(zoom * mrot * pos, 1.0);
-	fnormal = mrot * normal;
 	gl_Position.w = 1.0 + pfactor * gl_Position.z;
 	gl_Position.z /= 4.0;
-	if (outlining) gl_Position.z += 0.02;
+	gl_Position.z += dz;
+
+	P = mrot * pos;
+	N = mrot * (normal + drough * rough);
 }
 </script>
-<script id=fsource type="x-shader/x-fragment">
-uniform mediump vec3 color;
-uniform mediump vec3 lightpos;
-varying mediump vec3 fnormal;
-uniform bool outlining;
+<script id=fphong type="x-shader/x-fragment">
+// https://en.wikipedia.org/wiki/Phong_reflection_model
+precision highp float;
+
+const int nlight = 1;
+const vec3 Ca = vec3(1.0);
+const vec3 Cd = vec3(1.0);
+const vec3 Cs = vec3(1.0);
+
+uniform float alpha;
+uniform bool renormalize;
+
+uniform vec3 Lp[nlight];
+uniform vec3 La, Ls[nlight], Ld[nlight];
+
+varying vec3 P, N;
+
 void main() {
-	mediump float shade = 0.6 + 0.3 * dot(fnormal, lightpos);
-	gl_FragColor = vec4(color * shade, 1.0);
-	if (outlining) gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+	// unit vector pointing to viewer
+	vec3 V = vec3(0.0, 0.0, -1.0);
+	// ambient component
+	vec3 C = La * Ca;
+
+	vec3 Nhat = N;
+	if (renormalize) Nhat = normalize(Nhat);
+	for (int m = 0; m < nlight; ++m) {
+		// unit vector from surface to light source
+		vec3 L = normalize(Lp[m] - P);
+		// unit reflected vector
+		vec3 R = -reflect(L, Nhat);
+		// diffuse component
+		C += Ld[m] * Cd * dot(L, Nhat);
+		// specular component
+		C += Ls[m] * Cs * pow(max(dot(R, V), 0.0), alpha);
+	}
+	gl_FragColor = vec4(clamp(C, 0.0, 1.0), 1.0);
+}
+</script>
+<script id=fsolid type="x-shader/x-fragment">
+precision highp float;
+uniform vec3 C;
+void main() {
+	gl_FragColor = vec4(C, 1.0);
 }
 </script>
 <script>
@@ -35,8 +91,8 @@ void main() {
 var tau = 2 * Math.PI
 
 var canvas = document.getElementById("canvas")
-canvas.width = 600
-canvas.height = 600
+canvas.width = 1000
+canvas.height = 1000
 UFX.mouse.init(canvas)
 UFX.mouse.capture.wheel = true
 UFX.mouse.capture.right = true
@@ -45,21 +101,8 @@ var gl = UFX.gl(canvas)
 gl.clearColor(0.5, 0.5, 0.7, 1)
 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 gl.enable(gl.DEPTH_TEST)
-var prog = gl.buildProgram("vsource", "fsource")
-prog.use()
-
-
-function flatten(a) {
-	var n = 0
-	a.forEach(function (c) { n += c.length })
-	var b = new Array(n)
-	for (var j = 0, k = 0 ; j < a.length ; ++j) {
-		for (var i = 0 ; i < a[j].length ; ++k, ++i) {
-			b[k] = a[j][i]
-		}
-	}
-	return b
-}
+gl.addProgram("phong", "vsource", "fphong")
+gl.addProgram("solid", "vsource", "fsolid")
 
 // quaternions implemented as <i, j, k, 1>.
 function qmult(p, q) {
@@ -83,8 +126,8 @@ function qrot(q) {
 	]
 }
 
-function torus() {
-	var N = 12, n = 12, R = 2, r = 1
+function torus(N) {
+	var n = N, R = 2, r = 1
 	var data = [], ns = {}
 	for (var i = 0 ; i < N ; ++i) {
 		var A = tau * i / N, CA = Math.cos(A), SA = Math.sin(A)
@@ -94,6 +137,7 @@ function torus() {
 			data.push([
 				R * CA + r * CB * CA, R * SA + r * CB * SA, r * SB,  // position
 				CB * CA, CB * SA, SB,  // normal
+				UFX.random(-1, 1), UFX.random(-1, 1), UFX.random(-1, 1),  // random dnormal
 			])
 		}
 	}
@@ -108,6 +152,7 @@ function torus() {
 		}
 	}
 	return {
+		N: N,
 		data: [].concat.apply([], data),
 		triangles: triangles,
 		wireframe: wireframe,
@@ -115,67 +160,111 @@ function torus() {
 }
 
 
-var solid = torus()
-var buffer = gl.createBuffer()
-gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(solid.data), gl.STATIC_DRAW)
+var solid = null
+function build(N) {
+	solid = torus(N)
+
+	solid.buffer = gl.createBuffer()
+	gl.bindBuffer(gl.ARRAY_BUFFER, solid.buffer)
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(solid.data), gl.STATIC_DRAW)
+
+	solid.tribuffer = gl.createBuffer()
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, solid.tribuffer)
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(solid.triangles), gl.STATIC_DRAW)
+
+	solid.wirebuffer = gl.createBuffer()
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, solid.wirebuffer)
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(solid.wireframe), gl.STATIC_DRAW)
+
+	gl.enableVertexAttribArray(gl.progs.phong.attributes.pos)
+	gl.enableVertexAttribArray(gl.progs.phong.attributes.normal)
+	gl.enableVertexAttribArray(gl.progs.phong.attributes.rough)
+	gl.vertexAttribPointer(gl.progs.phong.attributes.pos, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 0 * Float32Array.BYTES_PER_ELEMENT)
+	gl.vertexAttribPointer(gl.progs.phong.attributes.normal, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT)
+	gl.vertexAttribPointer(gl.progs.phong.attributes.rough, 3, gl.FLOAT, false, 9 * Float32Array.BYTES_PER_ELEMENT, 6 * Float32Array.BYTES_PER_ELEMENT)
+}
+build(10)
 
 var q = qnorm([2, 0, 0, 1])
 var zoom = 0.2
 var pfactor = 0.5
-prog.set.color([0, 0.6, 0.4])
-prog.set.lightpos([0.5773, 0.5773, 0.5773])
 
-var attribs = {
-	pos: gl.getAttribLocation(prog, "pos"),
-	normal: gl.getAttribLocation(prog, "normal")
+function getcontrols() {
+	var values = {}
+	function walk(node) {
+		if (node.tagName == "INPUT") {
+			switch (node.type.toLowerCase()) {
+				case "range": values[node.id] = +node.value ; break
+				case "checkbox": values[node.id] = !!node.checked ; break
+			}
+		}
+		;[].forEach.call(node.children, walk)
+	}
+	walk(document.getElementById("controls"))
+	return values
 }
-gl.enableVertexAttribArray(attribs.pos)
-gl.enableVertexAttribArray(attribs.normal)
-
-var tribuffer = gl.createBuffer()
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, tribuffer)
-gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(solid.triangles), gl.STATIC_DRAW)
-
-var wirebuffer = gl.createBuffer()
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, wirebuffer)
-gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(solid.wireframe), gl.STATIC_DRAW)
-
-// gl.lineWidth(4)
 
 function think(dt) {
 	var mstate = UFX.mouse.state()
 	if (mstate.left.isdown) {
 		var dq = qnorm([0.005 * mstate.dpos[1], 0.005 * mstate.dpos[0], 0, 1])
 		q = qnorm(qmult(q, dq))
-	} else if (mstate.right.isdown) {
-		pfactor -= 0.003 * mstate.dpos[1]
-		pfactor = Math.min(Math.max(pfactor, 0), 3)
 	}
 	canvas.style.cursor = mstate.left.isdown ? "move" : mstate.right.isdown ? "ns-resize" : "pointer"
 	zoom *= Math.exp(0.03 * mstate.wheeldy)
-	prog.set({
+
+	var controls = getcontrols()
+	pfactor = controls.pfactor
+	if (solid.N != controls.N) build(controls.N)
+
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+	if (controls.outline) {
+		gl.progs.solid.use()
+		gl.progs.solid.set({
+			mrot: qrot(q),
+			zoom: zoom,
+			pfactor: pfactor,
+			C: [0, 0, 0],
+			dz: 0.1,
+		})
+		gl.bindBuffer(gl.ARRAY_BUFFER, solid.buffer)
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, solid.wirebuffer)
+		gl.lineWidth(Math.ceil(40 * zoom))
+		gl.drawElements(gl.LINES, solid.wireframe.length, gl.UNSIGNED_SHORT, 0)
+	}
+
+	gl.progs.phong.use()
+	gl.progs.phong.set({
 		mrot: qrot(q),
 		zoom: zoom,
 		pfactor: pfactor,
-		outlining: false,
+		Lp: [10, 6, 0],
+		La: [controls.Lar, controls.Lag, controls.Lab],
+		Ls: [controls.Lsr, controls.Lsg, controls.Lsb],
+		Ld: [controls.Ldr, controls.Ldg, controls.Ldb],
+		alpha: controls.alpha,
+		renormalize: controls.renormalize,
+		drough: controls.drough,
 	})
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	if (!solid) return
-	gl.vertexAttribPointer(attribs.pos, 3, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0 * Float32Array.BYTES_PER_ELEMENT)
-	gl.vertexAttribPointer(attribs.normal, 3, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT)
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, tribuffer)
+	gl.bindBuffer(gl.ARRAY_BUFFER, solid.buffer)
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, solid.tribuffer)
 	gl.drawElements(gl.TRIANGLES, solid.triangles.length, gl.UNSIGNED_SHORT, 0)
 
-/*
-	if (document.getElementById("dooutline").checked) {
-		prog.set.outlining(true)
-		gl.disableVertexAttribArray(prog.attribs.normal)
-		gl.vertexAttribPointer(prog.attribs.pos, 3, gl.FLOAT, false, 0, solid.outline * 4)
-		gl.drawArrays(gl.LINES, 0, 6 * solid.n)
-		gl.enableVertexAttribArray(prog.attribs.normal)
+	if (controls.wireframe) {
+		gl.lineWidth(1)
+		gl.progs.solid.use()
+		gl.progs.solid.set({
+			mrot: qrot(q),
+			zoom: zoom,
+			pfactor: pfactor,
+			C: [0, 0.5, 0],
+			dz: -0.001,
+		})
+		gl.bindBuffer(gl.ARRAY_BUFFER, solid.buffer)
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, solid.wirebuffer)
+		gl.drawElements(gl.LINES, solid.wireframe.length, gl.UNSIGNED_SHORT, 0)
 	}
-*/
 }
 UFX.ticker.init(think)
 </script>
